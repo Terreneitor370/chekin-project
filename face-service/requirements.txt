@@ -1,0 +1,10 @@
+# face-service - Python 3.10 a 3.12
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+deepface>=0.0.93
+tf-keras            # requerido por DeepFace con TensorFlow 2.16+
+numpy
+pillow
+# anti_spoofing de DeepFace usa torch (se descarga al activarlo)
+torch

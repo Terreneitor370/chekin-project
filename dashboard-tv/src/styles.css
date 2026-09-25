@@ -1,0 +1,36 @@
+/* Diseño para TV 1920x1080: fuentes grandes, margen de seguridad de 5%, alto contraste, sin interacción. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { width: 100%; height: 100%; overflow: hidden; background: #0e1726; color: #fff; font-family: Arial, Helvetica, sans-serif; }
+
+.pantalla { position: absolute; inset: 5vh 5vw; display: flex; gap: 3vw; }
+.mensaje-central { display: flex; height: 100%; align-items: center; justify-content: center; font-size: 48px; padding: 5vw; text-align: center; }
+
+/* Multimedia */
+.video { flex: 1; height: 80vh; background: #000; border-radius: 16px; object-fit: cover; }
+.video-vacio { display: flex; align-items: center; justify-content: center; font-size: 40px; color: #8aa0b8; }
+.lateral { width: 26vw; display: flex; flex-direction: column; gap: 4vh; }
+.reloj-hora { font-size: 120px; font-weight: bold; }
+.reloj-fecha { font-size: 36px; color: #b8c7d9; text-transform: capitalize; }
+.contador { font-size: 44px; font-weight: bold; color: #7fc8ff; }
+.ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 9vh; overflow: hidden; background: #1f3a5f; border-radius: 12px; display: flex; align-items: center; }
+.ticker-texto { white-space: nowrap; font-size: 40px; padding-left: 100%; animation: desplazar linear infinite; }
+@keyframes desplazar { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* Anuncio */
+.anuncio { align-items: center; justify-content: center; }
+.anuncio-foto { width: 32vw; height: 32vw; max-height: 75vh; border-radius: 24px; object-fit: cover; background: #1f3a5f; }
+.anuncio-nombre { font-size: 88px; font-weight: bold; }
+.anuncio-hora { font-size: 56px; color: #7fe0a0; margin-top: 2vh; }
+.anuncio-hora.tarde { color: #ffb36b; }
+
+/* Resumen */
+.resumen { flex-direction: column; }
+.columnas { display: flex; gap: 4vw; flex: 1; }
+.columnas section { flex: 1; background: #16243a; border-radius: 16px; padding: 3vh 2vw; overflow: hidden; }
+.columnas h2 { font-size: 44px; margin-bottom: 2vh; color: #7fc8ff; }
+.subtitulo { margin-top: 3vh; }
+.fila { font-size: 36px; padding: 1vh 0; border-bottom: 1px solid #253a57; display: flex; justify-content: space-between; }
+.fila.tarde { color: #ffb36b; }
+
+/* Conexión */
+.banner-conexion { position: absolute; top: 2vh; right: 5vw; background: #b03a2e; padding: 12px 24px; border-radius: 10px; font-size: 32px; }

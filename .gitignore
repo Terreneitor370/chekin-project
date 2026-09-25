@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Builds
+dist/
+build/
+.expo/
+web-build/
+mobile/android/
+mobile/ios/
+*.apk
+*.aab
+
+# Variables de entorno (nunca subir secretos)
+.env
+.env.*
+!.env.example
+
+# Archivos subidos por usuarios
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Modelos descargados por DeepFace
+.deepface/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log

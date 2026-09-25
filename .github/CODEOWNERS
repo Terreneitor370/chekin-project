@@ -1,0 +1,14 @@
+# Regla de oro: cada quien es dueño de su carpeta.
+# GitHub pide la revisión del dueño cuando un Pull Request toca su carpeta.
+# Reemplacen los usuarios de GitHub de cada integrante (el de Isabel ya está).
+
+/mobile/         @Terreneitor370
+/server/         @USUARIO_KASSANDRA
+/dashboard-tv/   @USUARIO_JORGE
+/panel-admin/    @USUARIO_JORGE
+/database/       @USUARIO_JESHUA
+/infra/          @USUARIO_JESHUA
+/face-service/   @USUARIO_JESHUA
+
+# El contrato de API lo revisan backend y consumidores
+/docs/api.md     @USUARIO_KASSANDRA @Terreneitor370 @USUARIO_JORGE
