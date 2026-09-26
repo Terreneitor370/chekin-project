@@ -45,6 +45,7 @@ src/
     FotoRegistroScreen.js     3/3 foto de referencia para DeepFace
     CheckinScreen.js          reto -> huella firma -> selfie -> envío
     ResultadoScreen.js        "Entrada a las 09:15"
+    MiAsistenciaScreen.js     dashboard del empleado (hoy, días, retardos, últimos 7 días)
     PruebasScreen.js          pruebas del Día 1
 ```
 
@@ -62,3 +63,4 @@ src/
 - [ ] Confirmar compilación de react-native-biometrics en el Oppo Reno 14
 - [ ] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.)
 - [ ] Probar en 2 o 3 teléfonos
+- [ ] Probar "Mi asistencia" cuando Kassandra publique /api/mi/sesion y /api/mi/asistencia

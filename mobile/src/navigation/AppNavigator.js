@@ -7,6 +7,7 @@ import FotoRegistroScreen from '../screens/FotoRegistroScreen';
 import CheckinScreen from '../screens/CheckinScreen';
 import ResultadoScreen from '../screens/ResultadoScreen';
 import PruebasScreen from '../screens/PruebasScreen';
+import MiAsistenciaScreen from '../screens/MiAsistenciaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +21,7 @@ export default function AppNavigator() {
         <Stack.Screen name="FotoRegistro" component={FotoRegistroScreen} options={{ title: 'Registro 3 de 3' }} />
         <Stack.Screen name="Checkin" component={CheckinScreen} options={{ title: 'Checar' }} />
         <Stack.Screen name="Resultado" component={ResultadoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MiAsistencia" component={MiAsistenciaScreen} options={{ title: 'Mi asistencia' }} />
         <Stack.Screen name="Pruebas" component={PruebasScreen} options={{ title: 'Pruebas del Día 1' }} />
       </Stack.Navigator>
     </NavigationContainer>

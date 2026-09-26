@@ -9,7 +9,7 @@ import CamaraFrontal from '../components/CamaraFrontal';
 import { Boton, Pantalla, Texto, Titulo, colores } from '../components/ui';
 
 export default function CheckinScreen({ navigation }) {
-  const [paso, setPaso] = useState('inicio'); // inicio | camara | enviando | error
+  const [paso, setPaso] = useState('inicio'); // inicio | camara | enviando | error | sinRespuesta
   const [error, setError] = useState(null);
   const datos = useRef({});
 
@@ -28,14 +28,18 @@ export default function CheckinScreen({ navigation }) {
     }
   }
 
+  // Reglas de reintento (docs/api.md, sección 4):
+  //  - Sin respuesta del servidor (red caída): reenviar la MISMA petición con el mismo idempotencyKey.
+  //  - Cualquier respuesta de error (503, rostro, etc.): el reto ya se gastó -> "Intentar de nuevo" pide reto y huella nuevos.
   async function enviar(selfieUri) {
+    datos.current.selfieUri = selfieUri;
     setPaso('enviando');
     try {
-      const respuesta = await enviarCheckin({ ...datos.current, selfieUri });
+      const respuesta = await enviarCheckin(datos.current);
       navigation.replace('Resultado', { respuesta });
     } catch (e) {
       setError(mensajeDeError(e));
-      setPaso('error');
+      setPaso(e?.response ? 'error' : 'sinRespuesta');
     }
   }
 
@@ -49,8 +53,15 @@ export default function CheckinScreen({ navigation }) {
       {paso === 'inicio' && <Texto>Pon tu huella y después tómate una selfie.</Texto>}
       {paso === 'enviando' && <Texto>Estamos verificando tu huella y tu rostro. Puede tardar unos segundos.</Texto>}
       {error && <Texto style={{ color: colores.error }}>{error}</Texto>}
-      {(paso === 'inicio' || paso === 'error') && (
-        <Boton titulo={paso === 'error' ? 'Intentar de nuevo' : 'Empezar'} onPress={empezar} />
+      {paso === 'sinRespuesta' && (
+        <Boton titulo="Reenviar" onPress={() => enviar(datos.current.selfieUri)} />
+      )}
+      {(paso === 'inicio' || paso === 'error' || paso === 'sinRespuesta') && (
+        <Boton
+          titulo={paso === 'inicio' ? 'Empezar' : 'Intentar de nuevo'}
+          variante={paso === 'sinRespuesta' ? 'secundario' : 'primario'}
+          onPress={empezar}
+        />
       )}
     </Pantalla>
   );

@@ -11,17 +11,7 @@ CREATE DATABASE IF NOT EXISTS checador
 USE checador;
 SET NAMES utf8mb4;
 
--- Usuarios del panel admin (RH / supervisores)
-CREATE TABLE IF NOT EXISTS usuarios (
-  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  email           VARCHAR(120) NOT NULL UNIQUE,
-  password_hash   VARCHAR(100) NOT NULL,
-  rol             ENUM('admin','supervisor') NOT NULL DEFAULT 'supervisor',
-  activo          TINYINT(1) NOT NULL DEFAULT 1,
-  creado_en       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- Empleados que checan (se quita huella_token del PDF: la huella nunca sale del teléfono)
+-- Empleados que checan: rol "empleado" (se quita huella_token del PDF: la huella nunca sale del teléfono)
 CREATE TABLE IF NOT EXISTS empleados (
   id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre               VARCHAR(120) NOT NULL,
@@ -30,7 +20,27 @@ CREATE TABLE IF NOT EXISTS empleados (
   tolerancia_min       SMALLINT UNSIGNED NOT NULL DEFAULT 10,
   foto_registro_path   VARCHAR(255) NULL,         -- foto de referencia para DeepFace (carpeta privada)
   activo               TINYINT(1) NOT NULL DEFAULT 1,
+  registrado_por       INT UNSIGNED NULL,         -- admin que lo registró (FK al final del archivo)
   creado_en            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Usuarios del panel web. Roles:
+--   admin      -> todo, incluido registrar usuarios y empleados, generar códigos y desactivar
+--   supervisor -> lo mismo que admin, excepto crear, registrar o desactivar usuarios y empleados
+-- El tercer rol, "empleado", vive en la tabla empleados y entra por la app (huella + rostro, sin contraseña).
+CREATE TABLE IF NOT EXISTS usuarios (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre          VARCHAR(120) NULL,
+  email           VARCHAR(120) NOT NULL UNIQUE,
+  password_hash   VARCHAR(100) NOT NULL,
+  rol             ENUM('admin','supervisor') NOT NULL DEFAULT 'supervisor',
+  empleado_id     INT UNSIGNED NULL UNIQUE,      -- si este admin/supervisor también checa
+  activo          TINYINT(1) NOT NULL DEFAULT 1,
+  creado_por      INT UNSIGNED NULL,             -- admin que lo registró
+  creado_en       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en  DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_usuario_empleado FOREIGN KEY (empleado_id) REFERENCES empleados(id),
+  CONSTRAINT fk_usuario_creador FOREIGN KEY (creado_por) REFERENCES usuarios(id)
 ) ENGINE=InnoDB;
 
 -- Códigos de vinculación de 6 dígitos (un solo uso, 15 minutos)
@@ -114,5 +124,9 @@ CREATE TABLE IF NOT EXISTS dispositivos_tv (
   activo           TINYINT(1) NOT NULL DEFAULT 1,
   ultimo_contacto  DATETIME NULL
 ) ENGINE=InnoDB;
+
+-- FK que se agrega al final porque usuarios se crea después de empleados
+ALTER TABLE empleados
+  ADD CONSTRAINT fk_empleado_registrador FOREIGN KEY (registrado_por) REFERENCES usuarios(id);
 
 -- Nota: la tabla "permisos" del PDF se sustituye por los roles en código (server/src/middlewares/auth.js).

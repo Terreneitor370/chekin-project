@@ -24,6 +24,7 @@ export default function InicioScreen({ navigation }) {
         <>
           <Texto>Hola, {sesion.nombre}.</Texto>
           <Boton titulo="Checar" onPress={() => navigation.navigate('Checkin')} />
+          <Boton titulo="Mi asistencia" variante="secundario" onPress={() => navigation.navigate('MiAsistencia')} />
         </>
       ) : (
         <>

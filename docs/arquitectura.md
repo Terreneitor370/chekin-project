@@ -14,6 +14,16 @@
 | `/face-service` | Jeshua E. Pérez | Python + FastAPI + DeepFace | Compara foto de registro con selfie |
 | `/infra` | Jeshua E. Pérez | Nginx, PM2, Certbot, ufw | Publicación con HTTPS y backups |
 
+## Roles
+
+| Rol | Entra por | Puede |
+|---|---|---|
+| Admin | Panel web | Todo, incluido registrar usuarios del panel y empleados, generar códigos de registro y desactivar |
+| Supervisor | Panel web | Lo mismo que el admin, excepto crear, registrar o desactivar usuarios y empleados |
+| Empleado | App móvil (huella + rostro) | Hacer check-in y ver su propio dashboard ("Mi asistencia") |
+
+Detalle de permisos por endpoint en [api.md](api.md).
+
 ## Decisiones confirmadas por el profesor
 
 1. **Pantalla:** Opción A. La app web se abre en el navegador del Roku (`/tv/?token=...`).

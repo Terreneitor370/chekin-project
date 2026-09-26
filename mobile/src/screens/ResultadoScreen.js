@@ -6,7 +6,7 @@ function hora(fechaIso) {
 }
 
 export default function ResultadoScreen({ navigation, route }) {
-  const { checkin, empleado } = route.params.respuesta;
+  const { checkin, empleado, tokenEmpleado } = route.params.respuesta;
   return (
     <Pantalla>
       <Titulo>Registro exitoso</Titulo>
@@ -15,6 +15,9 @@ export default function ResultadoScreen({ navigation, route }) {
         {checkin.tipo === 'entrada' ? 'Entrada' : 'Salida'} a las {hora(checkin.registradoEn)}
       </Texto>
       {checkin.tarde && <Texto style={{ color: colores.error }}>Registrado con retardo.</Texto>}
+      {tokenEmpleado && (
+        <Boton titulo="Ver mi asistencia" variante="secundario" onPress={() => navigation.replace('MiAsistencia', { tokenEmpleado })} />
+      )}
       <Boton titulo="Listo" onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] })} />
     </Pantalla>
   );
