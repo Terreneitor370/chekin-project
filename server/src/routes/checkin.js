@@ -3,19 +3,20 @@ import crypto from 'node:crypto';
 import { query, pool } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { subirImagen, exigirImagen } from '../middlewares/upload.js';
+import { validar } from '../middlewares/validar.js';
 import { verificarFirma } from '../services/firma.js';
 import { verificarRostro } from '../services/faceClient.js';
 import { guardarArchivo, leerArchivo } from '../services/archivos.js';
 import { clasificarRegistro } from '../services/asistencia.js';
 import { emitirTv, EVENTOS } from '../services/eventos.js';
 import { estadoDelDia } from '../services/estadoTv.js';
+import { checkin as esquemaCheckin, retoQuery } from '../validacion.js';
 
 const router = Router();
 
 // GET /api/checkin/reto?empleadoId=3  -> reto de un solo uso (60 s)
-router.get('/reto', async (req, res) => {
-  const empleadoId = Number(req.query.empleadoId);
-  if (!empleadoId) throw errores.datosInvalidos('Falta empleadoId');
+router.get('/reto', validar(retoQuery, 'query'), async (req, res) => {
+  const { empleadoId } = req.query;
   const [empleado] = await query('SELECT id FROM empleados WHERE id = ? AND activo = 1', [empleadoId]);
   if (!empleado) throw errores.noEncontrado('Empleado no encontrado');
   const reto = crypto.randomUUID();
@@ -25,13 +26,8 @@ router.get('/reto', async (req, res) => {
 });
 
 // POST /api/checkin  (multipart: empleadoId, retoId, firma, idempotencyKey, selfie)
-router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), async (req, res) => {
-  const empleadoId = Number(req.body.empleadoId);
-  const retoId = Number(req.body.retoId);
-  const { firma, idempotencyKey } = req.body;
-  if (!empleadoId || !retoId || !firma || !idempotencyKey) {
-    throw errores.datosInvalidos('Faltan empleadoId, retoId, firma o idempotencyKey');
-  }
+router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), validar(esquemaCheckin), async (req, res) => {
+  const { empleadoId, retoId, firma, idempotencyKey } = req.body;
 
   // 0. Reintento de red: si ya existe ese idempotencyKey, devolver el mismo resultado
   const [previo] = await query(

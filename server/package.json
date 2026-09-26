@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "test": "node --test \"test/*.test.js\"",
     "hash": "node scripts/hash.js",
     "probar-firma": "node scripts/probar-firma.js",
     "simular": "node scripts/simular-flujo.js"
@@ -25,7 +26,8 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.4.0",
     "mysql2": "^3.24.4",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "socket.io-client": "^4.8.3"
