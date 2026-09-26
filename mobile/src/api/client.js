@@ -12,7 +12,7 @@ const MENSAJES_POR_CODIGO = {
   FIRMA_INVALIDA: 'No pudimos validar tu huella. Usa la huella registrada en este teléfono.',
   RETO_INVALIDO: 'La verificación expiró. Toca "Intentar de nuevo" y pon tu huella otra vez.',
   SIN_PERMISO: 'Tu cuenta no tiene permiso para hacer esto.',
-  ROSTRO_NO_COINCIDE: 'No pudimos reconocer tu rostro. Mira de frente, con buena luz, sin gorra ni lentes oscuros.',
+  ROSTRO_NO_COINCIDE: 'La iluminación es insuficiente o tu rostro no coincide con tu perfil registrado.',
   ROSTRO_NO_REAL: 'Detectamos una foto o una pantalla. Colócate frente a la cámara en persona.',
   NO_ENCONTRADO: 'No encontramos tu registro. Confirma tu código con Recursos Humanos.',
   DUPLICADO: 'Ya registraste tu asistencia hace unos minutos. Espera 5 minutos para volver a checar.',

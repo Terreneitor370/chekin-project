@@ -40,9 +40,9 @@ src/
   navigation/AppNavigator.js
   screens/
     InicioScreen.js           decide: registrar o checar
-    VincularScreen.js         1/3 código de 6 dígitos (reemplaza LoginScreen con ID)
-    RegistroHuellaScreen.js   2/3 llave protegida por la huella -> BD
-    FotoRegistroScreen.js     3/3 foto de referencia para DeepFace
+    VincularScreen.js         vincular: código de 6 dígitos (reemplaza LoginScreen con ID)
+    RegistroHuellaScreen.js   paso 1 de 2: llave protegida por la huella -> BD
+    FotoRegistroScreen.js     paso 2 de 2: foto de referencia para DeepFace
     CheckinScreen.js          reto -> huella firma -> selfie -> envío
     ResultadoScreen.js        "Entrada a las 09:15"
     MiAsistenciaScreen.js     dashboard del empleado (hoy, días, retardos, últimos 7 días)

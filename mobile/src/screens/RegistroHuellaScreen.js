@@ -1,11 +1,11 @@
-// Paso 2 del registro: crea la llave protegida por la huella y la envía a la BD.
+// Paso 1 de 2 del registro: crea la llave protegida por la huella y la envía a la BD.
 import { useState } from 'react';
 import { Platform } from 'react-native';
 import { registrarLlave } from '../api/checador';
 import { mensajeDeError } from '../api/client';
 import { crearLlaves, firmar, sensorDisponible } from '../services/biometria';
 import { guardarSesion } from '../services/sesion';
-import { Boton, Pantalla, Texto, Titulo, colores } from '../components/ui';
+import { Boton, IconoEstado, Pantalla, Progreso, Texto, Titulo, colores } from '../components/ui';
 
 export default function RegistroHuellaScreen({ navigation, route }) {
   const { tokenVinculacion, nombre } = route.params;
@@ -32,10 +32,14 @@ export default function RegistroHuellaScreen({ navigation, route }) {
 
   return (
     <Pantalla>
-      <Titulo>Hola, {nombre}</Titulo>
-      <Texto>Ahora registra tu huella. Tu huella nunca sale del teléfono: solo se guarda una llave digital protegida por ella.</Texto>
-      {error && <Texto style={{ color: colores.error }}>{error}</Texto>}
-      <Boton titulo="Registrar huella" onPress={registrar} cargando={cargando} />
+      <Progreso paso={1} total={2} />
+      <IconoEstado nombre="finger-print" tamano={180} />
+      <Titulo style={{ textAlign: 'center' }}>Hola, {nombre}</Titulo>
+      <Texto style={{ textAlign: 'center', color: colores.suave }}>
+        Registra tu huella. Nunca sale del teléfono: solo se guarda una llave digital protegida por ella.
+      </Texto>
+      {error && <Texto style={{ color: colores.error, textAlign: 'center' }}>{error}</Texto>}
+      <Boton titulo="Registrar huella" icono="finger-print" onPress={registrar} cargando={cargando} />
     </Pantalla>
   );
 }

@@ -1,10 +1,11 @@
-// Paso 3 del registro: foto de referencia que DeepFace comparará en cada check-in.
+// Paso 2 de 2 del registro: foto de referencia que DeepFace comparará en cada check-in.
 import { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { subirFotoRegistro } from '../api/checador';
 import { mensajeDeError } from '../api/client';
 import { guardarSesion } from '../services/sesion';
 import CamaraFrontal from '../components/CamaraFrontal';
-import { Boton, Pantalla, Texto, Titulo, colores } from '../components/ui';
+import { Boton, IconoEstado, Pantalla, Texto, Titulo, colores } from '../components/ui';
 
 export default function FotoRegistroScreen({ navigation, route }) {
   const { tokenVinculacion } = route.params;
@@ -26,7 +27,8 @@ export default function FotoRegistroScreen({ navigation, route }) {
   if (estado === 'camara') {
     return (
       <CamaraFrontal
-        instruccion="Mira de frente, con buena luz, sin lentes oscuros ni gorra. Esta foto se usará para verificarte."
+        titulo="Registrar rostro"
+        instruccion="Pon tu rostro dentro del óvalo, de frente, con buena luz y sin lentes oscuros ni gorra."
         textoBoton="Tomar foto de registro"
         onFoto={enviar}
       />
@@ -35,9 +37,19 @@ export default function FotoRegistroScreen({ navigation, route }) {
 
   return (
     <Pantalla>
-      <Titulo>{estado === 'enviando' ? 'Guardando foto...' : 'No se pudo guardar'}</Titulo>
-      {error && <Texto style={{ color: colores.error }}>{error}</Texto>}
-      {estado === 'error' && <Boton titulo="Intentar de nuevo" onPress={() => setEstado('camara')} />}
+      {estado === 'enviando' ? (
+        <>
+          <ActivityIndicator size="large" color={colores.primario} />
+          <Titulo style={{ textAlign: 'center' }}>Guardando foto...</Titulo>
+        </>
+      ) : (
+        <>
+          <IconoEstado nombre="alert" tono="error" />
+          <Titulo style={{ textAlign: 'center' }}>No se pudo guardar</Titulo>
+          {error && <Texto style={{ color: colores.error, textAlign: 'center' }}>{error}</Texto>}
+          <Boton titulo="Intentar de nuevo" onPress={() => setEstado('camara')} />
+        </>
+      )}
     </Pantalla>
   );
 }

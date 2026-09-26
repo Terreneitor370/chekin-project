@@ -1,11 +1,12 @@
 // Cámara frontal con guía ovalada. Devuelve la URI de la foto ya comprimida.
 import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { comprimir } from '../services/imagen';
-import { Boton, Pantalla, Texto, colores } from './ui';
+import { Boton, Pantalla, Tarjeta, Texto, colores } from './ui';
 
-export default function CamaraFrontal({ instruccion, textoBoton = 'Tomar foto', onFoto }) {
+export default function CamaraFrontal({ titulo = 'Mira a la cámara', instruccion, textoBoton = 'Tomar foto', onFoto }) {
   const [permiso, pedirPermiso] = useCameraPermissions();
   const camara = useRef(null);
   const [tomando, setTomando] = useState(false);
@@ -33,10 +34,16 @@ export default function CamaraFrontal({ instruccion, textoBoton = 'Tomar foto', 
   return (
     <View style={estilos.contenedor}>
       <CameraView ref={camara} style={StyleSheet.absoluteFill} facing="front" />
+      <Tarjeta style={estilos.encabezado}>
+        <View style={estilos.titulo}>
+          <Ionicons name="eye-outline" size={22} color={colores.primario} />
+          <Texto style={estilos.tituloTexto}>{titulo}</Texto>
+        </View>
+        <Texto style={estilos.instruccion}>{instruccion}</Texto>
+      </Tarjeta>
       <View style={estilos.ovalo} pointerEvents="none" />
       <View style={estilos.panel}>
-        <Texto style={estilos.instruccion}>{instruccion}</Texto>
-        <Boton titulo={textoBoton} onPress={tomar} cargando={tomando} />
+        <Boton titulo={textoBoton} icono="camera-outline" onPress={tomar} cargando={tomando} />
       </View>
     </View>
   );
@@ -44,10 +51,13 @@ export default function CamaraFrontal({ instruccion, textoBoton = 'Tomar foto', 
 
 const estilos = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#000' },
+  encabezado: { position: 'absolute', top: 16, left: 16, right: 16, alignItems: 'center' },
+  titulo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tituloTexto: { fontSize: 18, fontWeight: '700' },
+  instruccion: { color: colores.suave, textAlign: 'center', fontSize: 14, lineHeight: 20 },
   ovalo: {
-    position: 'absolute', alignSelf: 'center', top: '15%', width: 240, height: 320,
-    borderRadius: 160, borderWidth: 3, borderColor: colores.blanco,
+    position: 'absolute', alignSelf: 'center', top: '24%', width: 250, height: 330,
+    borderRadius: 165, borderWidth: 3, borderColor: colores.primario,
   },
-  panel: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24, gap: 12, backgroundColor: 'rgba(0,0,0,0.55)' },
-  instruccion: { color: colores.blanco, textAlign: 'center' },
+  panel: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24 },
 });
