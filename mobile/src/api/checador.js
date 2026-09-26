@@ -48,3 +48,18 @@ export async function enviarCheckin({ empleadoId, retoId, firma, idempotencyKey,
   });
   return data; // { checkin, empleado, verificacion }
 }
+
+// POST /api/mi/sesion  (firma con la huella -> token de empleado para "Mi asistencia")
+export async function abrirSesionEmpleado({ empleadoId, retoId, firma }) {
+  const { data } = await api.post('/mi/sesion', { empleadoId, retoId, firma });
+  return data; // { tokenEmpleado, empleado }
+}
+
+// GET /api/mi/asistencia  (rol empleado: solo sus propios registros)
+export async function miAsistencia(tokenEmpleado, { desde, hasta } = {}) {
+  const { data } = await api.get('/mi/asistencia', {
+    params: { desde, hasta },
+    headers: { Authorization: `Bearer ${tokenEmpleado}` },
+  });
+  return data; // { empleado, hoy, totales, registros }
+}

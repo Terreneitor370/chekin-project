@@ -7,6 +7,16 @@ Fuente de verdad entre `/mobile`, `/server`, `/dashboard-tv`, `/panel-admin` y `
 - Formato: JSON en UTF-8, salvo los endpoints que suben imágenes (`multipart/form-data`).
 - Fechas: ISO 8601 en UTC (`2026-09-29T15:04:05.000Z`). "Hoy" y las tardanzas se calculan en `America/Hermosillo`.
 
+## Roles
+
+| Rol | Dónde vive | Cómo entra | Qué puede hacer |
+|---|---|---|---|
+| `admin` | tabla `usuarios` | Panel web (email + contraseña) | Todo: registra usuarios del panel y empleados, genera códigos de registro, desactiva, avisos, multimedia, reportes |
+| `supervisor` | tabla `usuarios` | Panel web (email + contraseña) | Lo mismo que admin **excepto** crear, registrar o desactivar usuarios y empleados, y generar códigos de registro |
+| `empleado` | tabla `empleados` | App móvil (huella + rostro, sin contraseña) | Hacer check-in y ver su propio dashboard (`/api/mi/...`) |
+
+Si un admin o supervisor también checa, además necesita su registro en `empleados` y su teléfono vinculado.
+
 ## Tipos de acceso
 
 | Tipo | Quién | Cómo se envía |
@@ -16,6 +26,7 @@ Fuente de verdad entre `/mobile`, `/server`, `/dashboard-tv`, `/panel-admin` y `
 | Firma | App móvil en cada check-in | Campos `empleadoId`, `retoId` y `firma` en el cuerpo |
 | TV | Dashboard del Roku | `?token=<TV_TOKEN>` en la URL y en el handshake de Socket.IO |
 | Admin / Supervisor | Panel web | `Authorization: Bearer <JWT>` (guardar en memoria, no en localStorage) |
+| Empleado | App móvil, después de firmar con la huella | `Authorization: Bearer <tokenEmpleado>` (8 h, solo para `/api/mi/...`) |
 
 ## Formato de error (todos los endpoints)
 
@@ -84,7 +95,8 @@ Respuesta 201:
 ```json
 { "huellaId": 7, "empleadoId": 3 }
 ```
-- `llavePublica`: base64 de la llave RSA 2048 (X.509 / SubjectPublicKeyInfo), tal como la devuelve la librería (puede traer saltos de línea; el servidor los quita).
+- `llavePublica`: base64 de la llave RSA 2048 (X.509 / SubjectPublicKeyInfo), tal como la devuelve la librería.
+  **En Android trae saltos de línea** (`Base64.DEFAULT`): el servidor debe quitar espacios y saltos antes de validar. Lo mismo aplica a `firma`.
 - Registrar de nuevo desactiva la huella anterior del empleado.
 
 ### `POST /api/empleados/foto-registro` (vinculación, multipart)
@@ -126,11 +138,41 @@ Respuesta 201:
 ```
 Errores posibles: `RETO_INVALIDO`, `FIRMA_INVALIDA`, `ROSTRO_NO_COINCIDE`, `ROSTRO_NO_REAL`, `SIN_ROSTRO`, `DUPLICADO`, `SERVICIO_FACIAL_NO_DISPONIBLE`.
 
+**El reto se gasta en cuanto el servidor lo recibe**, aunque el check-in falle después (por ejemplo 503 de DeepFace o rostro no verificado).
+Para reintentar, la app pide un **reto nuevo** y vuelve a firmar con la huella. Solo se reenvía la misma petición (mismo `idempotencyKey`) si la red se cortó y no hubo respuesta: el servidor devuelve el resultado original.
+
+La respuesta 201 incluye además `"tokenEmpleado": "<JWT 8 h>"` para abrir "Mi asistencia" sin pedir otra huella.
+
 Reglas del servidor:
 - Hora del registro: la del servidor, nunca la del teléfono.
 - `tipo`: el primer registro del día es `entrada`; el siguiente, `salida`.
 - `tarde`: `entrada` después de `hora_entrada + tolerancia_min` del empleado.
 - Duplicado: mismo empleado en menos de 5 minutos.
+
+## 4.1 Dashboard del empleado (rol `empleado`)
+
+### `POST /api/mi/sesion` (firma)
+Abre "Mi asistencia" desde la app sin hacer check-in. La app pide un reto (`GET /api/checkin/reto`) y lo firma con la huella.
+```json
+{ "empleadoId": 3, "retoId": 1543, "firma": "<base64>" }
+```
+Respuesta 200:
+```json
+{ "tokenEmpleado": "<JWT 8 h>", "empleado": { "id": 3, "nombre": "Isabel Celis" } }
+```
+
+### `GET /api/mi/asistencia?desde=YYYY-MM-DD&hasta=YYYY-MM-DD` (empleado)
+Sin fechas: últimos 7 días. Un empleado solo puede ver sus propios registros (el id sale del token, no de la URL).
+```json
+{
+  "empleado": { "id": 3, "nombre": "Isabel Celis", "horaEntrada": "08:00", "toleranciaMin": 10 },
+  "hoy": { "entrada": "2026-09-29T15:04:05.000Z", "salida": null, "tarde": false },
+  "totales": { "diasConAsistencia": 5, "tardanzas": 1 },
+  "registros": [
+    { "id": 88, "tipo": "entrada", "tarde": false, "registradoEn": "2026-09-29T15:04:05.000Z" }
+  ]
+}
+```
 
 ## 5. Pantalla del Roku
 
@@ -149,23 +191,28 @@ Se llama al cargar la página y cada vez que el socket se reconecta.
 }
 ```
 
-## 6. Panel admin (JWT)
+## 6. Panel web (JWT de admin o supervisor)
 
-| Método | Ruta | Rol mínimo | Descripción |
-|---|---|---|---|
-| GET | `/api/empleados` | supervisor | Lista de empleados con estado de huella y foto |
-| POST | `/api/empleados` | admin | Crear `{ nombre, email, horaEntrada: "08:00", toleranciaMin: 10 }` |
-| PUT | `/api/empleados/:id` | admin | Editar |
-| DELETE | `/api/empleados/:id` | admin | Desactivar (no se borra el historial) |
-| POST | `/api/empleados/:id/codigo` | admin | Genera código de vinculación `{ "codigo": "482913", "expiraEn": "..." }` |
-| GET | `/api/checkins?fecha=2026-09-29` | supervisor | Check-ins del día con resultado de verificación |
-| GET | `/api/avisos` | supervisor | Todos los avisos |
-| POST | `/api/avisos` | supervisor | Crear `{ mensaje, fechaInicio, fechaFin }` |
-| PUT/DELETE | `/api/avisos/:id` | supervisor | Editar / desactivar |
-| GET | `/api/multimedia` | supervisor | Lista de videos |
-| POST | `/api/multimedia` | admin | Subir video MP4 (multipart `video`, `titulo`) |
-| PUT/DELETE | `/api/multimedia/:id` | admin | Orden / desactivar |
-| GET | `/api/reportes/asistencia?desde=...&hasta=...&formato=json\|csv` | supervisor | Historial |
+| Método | Ruta | Admin | Supervisor | Descripción |
+|---|---|---|---|---|
+| GET | `/api/usuarios` | Sí | No | Usuarios del panel |
+| POST | `/api/usuarios` | Sí | No | Crear `{ email, password, rol: "admin" \| "supervisor" }` |
+| PUT | `/api/usuarios/:id` | Sí | No | Cambiar rol, contraseña o desactivar |
+| GET | `/api/empleados` | Sí | Sí | Lista con estado de huella y foto |
+| POST | `/api/empleados` | Sí | No | Crear `{ nombre, email, horaEntrada: "08:00", toleranciaMin: 10 }` |
+| PUT | `/api/empleados/:id` | Sí | Sí | Editar horario y datos (no activa ni desactiva) |
+| DELETE | `/api/empleados/:id` | Sí | No | Desactivar (no se borra el historial) |
+| POST | `/api/empleados/:id/codigo` | Sí | No | Código de registro `{ "codigo": "482913", "expiraEn": "..." }` |
+| GET | `/api/checkins?fecha=YYYY-MM-DD` | Sí | Sí | Check-ins del día (sin fecha = hoy) |
+| GET/POST | `/api/avisos` | Sí | Sí | Listar / crear `{ mensaje, fechaInicio, fechaFin }` |
+| PUT/DELETE | `/api/avisos/:id` | Sí | Sí | Editar / desactivar |
+| GET/POST | `/api/multimedia` | Sí | Sí | Listar / subir MP4 (multipart `video`, `titulo`, `orden`) |
+| PUT/DELETE | `/api/multimedia/:id` | Sí | Sí | Orden / desactivar |
+| GET | `/api/reportes/asistencia?desde&hasta&formato=json\|csv` | Sí | Sí | Historial; `formato` solo acepta `json` o `csv` |
+
+Reglas de los `PUT`:
+- Solo se actualizan los campos enviados. Enviar `null` **no** borra un campo.
+- `activo` acepta `0`/`1` o `true`/`false`.
 
 ## 7. Eventos Socket.IO
 
