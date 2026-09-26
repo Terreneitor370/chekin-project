@@ -61,6 +61,6 @@ src/
 ## Pendientes (Isabel)
 
 - [ ] Confirmar compilación de react-native-biometrics en el Oppo Reno 14
-- [ ] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.)
+- [x] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.) en `src/api/client.js`
 - [ ] Probar en 2 o 3 teléfonos
 - [ ] Probar "Mi asistencia" cuando Kassandra publique /api/mi/sesion y /api/mi/asistencia
