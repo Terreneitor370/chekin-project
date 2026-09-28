@@ -7,6 +7,7 @@ import {
   checkin,
   crearAviso,
   crearEmpleado,
+  actualizarEmpleado,
   crearMultimedia,
   checkinsQuery,
   idParam,
@@ -161,6 +162,37 @@ describe('empleados', () => {
 
   it('acepta email nulo (el empleado puede no tener correo)', () => {
     assert.equal(falla(crearEmpleado, { nombre: 'X', email: null }), null);
+  });
+
+  // El formulario del panel manda email: "" si el campo se deja vacío; sin esto
+  // el alta de un empleado sin correo da 400 "el correo no tiene un formato válido".
+  it('convierte email "" a null, porque el campo está vacío en el formulario', () => {
+    const r = crearEmpleado.safeParse({ nombre: 'Kassandra Cuadras', email: '' });
+    assert.equal(r.success, true, `rechazó el email vacío: ${r.error?.issues[0]?.message}`);
+    assert.equal(r.data.email, null);
+  });
+
+  it('convierte email de solo espacios a null', () => {
+    const r = crearEmpleado.safeParse({ nombre: 'X', email: '   ' });
+    assert.equal(r.success, true);
+    assert.equal(r.data.email, null);
+  });
+
+  it('lo mismo al actualizar, para no perder el PUT del panel', () => {
+    const r = actualizarEmpleado.safeParse({ email: '' });
+    assert.equal(r.success, true, `rechazó el email vacío: ${r.error?.issues[0]?.message}`);
+    assert.equal(r.data.email, null);
+  });
+
+  it('sigue rechazando un correo de verdad mal escrito', () => {
+    assert.match(falla(crearEmpleado, { nombre: 'X', email: 'no-es-correo' }), /correo/);
+    assert.match(falla(actualizarEmpleado, { email: 'no-es-correo' }), /correo/);
+  });
+
+  it('acepta un correo válido y lo conserva', () => {
+    const r = crearEmpleado.safeParse({ nombre: 'X', email: 'kassandra@checador.local' });
+    assert.equal(r.success, true);
+    assert.equal(r.data.email, 'kassandra@checador.local');
   });
 });
 

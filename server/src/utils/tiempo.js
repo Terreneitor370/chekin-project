@@ -1,14 +1,17 @@
-import { config } from '../config.js';
+// Estas funciones son puras y no tocan la base de datos, así que se leen directo de
+// process.env en vez de importar config.js: importar config dispara requerido('DB_USER')
+// y 'JWT_SECRET', y entonces test/tiempo.test.js no correría en un clon sin .env.
+const ZONA = process.env.TZ_NEGOCIO || 'America/Hermosillo';
 
 // Devuelve la fecha "de negocio" (YYYY-MM-DD) en America/Hermosillo.
 export function fechaNegocio(date = new Date()) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: config.tzNegocio }).format(date);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: ZONA }).format(date);
 }
 
 // Hora local HH:MM:SS en America/Hermosillo.
 export function horaNegocio(date = new Date()) {
   return new Intl.DateTimeFormat('en-GB', {
-    timeZone: config.tzNegocio, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    timeZone: ZONA, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
   }).format(date);
 }
 

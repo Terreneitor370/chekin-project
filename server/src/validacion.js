@@ -29,6 +29,16 @@ const fecha = z
 const hora = z.string({ error: 'falta la hora' }).trim().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'usa el formato HH:MM en 24 horas');
 const correo = z.email('el correo no tiene un formato válido').max(120, 'máximo 120 caracteres');
 
+// El formulario del panel manda email: "" cuando el campo se deja en blanco, y el
+// campo es opcional (NULL en la BD). Sin esto el 400 le cobra al usuario un campo
+// que nunca pretendió llenar. Solo se convierte "" (o solo espacios); "no-es-correo"
+// sigue siendo 400.
+const correoOpcional = z.preprocess((v) => {
+  if (typeof v === 'string' && v.trim() === '') return null;
+  if (v === undefined) return null;
+  return v;
+}, correo.nullable().optional());
+
 // El panel manda booleanos, pero un <form> llega como "0"/"1"/"true"/"false".
 // (z.coerce.boolean() no sirve: convierte cualquier texto no vacío en true.)
 const booleano = z
@@ -79,7 +89,7 @@ export const idParam = z.object({ id });
 
 export const crearEmpleado = z.object({
   nombre: texto(120, 'el nombre'),
-  email: correo.nullable().optional(),
+  email: correoOpcional,
   horaEntrada: hora.default('08:00'),
   toleranciaMin: z.coerce.number({ error: 'debe ser un número' }).int('debe ser un entero').min(0, 'no puede ser negativo').max(65535, 'máximo 65535').default(10),
 });
@@ -87,7 +97,7 @@ export const crearEmpleado = z.object({
 // Los PUT usan COALESCE en SQL: un campo ausente no se toca.
 export const actualizarEmpleado = z.object({
   nombre: texto(120, 'el nombre').optional(),
-  email: correo.nullable().optional(),
+  email: correoOpcional,
   horaEntrada: hora.optional(),
   toleranciaMin: z.coerce.number({ error: 'debe ser un número' }).int('debe ser un entero').min(0, 'no puede ser negativo').max(65535, 'máximo 65535').optional(),
   activo: booleano.optional(),
