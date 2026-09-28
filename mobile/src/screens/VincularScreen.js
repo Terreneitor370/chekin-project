@@ -71,5 +71,7 @@ const estilos = StyleSheet.create({
   },
   casillaActiva: { borderColor: colores.primario, backgroundColor: colores.blanco },
   digito: { fontSize: 24, fontWeight: '700' },
-  inputOculto: { ...StyleSheet.absoluteFillObject, opacity: 0.02 },
+  // Tamaño fijo y mínimo: el valor ("777557") no debe influir en el ancho de la fila.
+  // El foco al tocar las casillas ya lo da el Pressable con input.current?.focus().
+  inputOculto: { position: 'absolute', top: 0, left: 0, width: 1, height: 1, opacity: 0 },
 });
