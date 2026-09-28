@@ -60,7 +60,8 @@ src/
 
 ## Pendientes (Isabel)
 
-- [ ] Confirmar compilación de react-native-biometrics en el Oppo Reno 14
+- [x] Confirmar compilación de react-native-biometrics en el Oppo Reno 14 (compiló y la huella funciona en Vincular/RegistroHuella)
 - [x] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.) en `src/api/client.js`
+- [ ] Probar registro y check-in completos de punta a punta — **bloqueado**: el `face-service` de Jeshua no está arriba (`/health` da `faceService: false`), así que la foto de registro siempre da `SERVICIO_FACIAL_NO_DISPONIBLE`
 - [ ] Probar en 2 o 3 teléfonos
 - [ ] Probar "Mi asistencia" cuando Kassandra publique /api/mi/sesion y /api/mi/asistencia
