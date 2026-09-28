@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 // Paleta alineada al panel-admin y la TV (mockups verdes, marca "Checker").
@@ -26,8 +26,18 @@ const TONOS = {
   error: { fuerte: colores.error, suave: colores.errorSuave },
 };
 
+// KeyboardAvoidingView en vez de solo View: el modo adjustResize del manifest
+// ya no es confiable en Android con edge-to-edge (Android 15+), así que el
+// desplazamiento por teclado se maneja aquí, en JS, para toda la app.
 export function Pantalla({ children, style }) {
-  return <View style={[estilos.pantalla, style]}>{children}</View>;
+  return (
+    <KeyboardAvoidingView
+      style={[estilos.pantalla, style]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      {children}
+    </KeyboardAvoidingView>
+  );
 }
 
 export function Titulo({ children, style }) {
