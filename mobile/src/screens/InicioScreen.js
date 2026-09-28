@@ -37,7 +37,7 @@ export default function InicioScreen({ navigation }) {
     <Pantalla>
       <View style={estilos.encabezado}>
         <Ionicons name="finger-print" size={30} color={colores.primario} />
-        <Titulo style={{ color: colores.primario, fontSize: 22 }}>Checador Inteligente</Titulo>
+        <Titulo style={{ color: colores.primario, fontSize: 22 }}>Checker.</Titulo>
       </View>
 
       {listo ? (
@@ -86,5 +86,5 @@ const estilos = StyleSheet.create({
   hora: { fontSize: 44, fontWeight: '700', fontVariant: ['tabular-nums'], color: colores.texto },
   checar: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colores.primario, borderRadius: 18, padding: 20 },
   checarTitulo: { color: colores.blanco, fontSize: 19, fontWeight: '800' },
-  checarSub: { color: '#DCE6FF', fontSize: 14 },
+  checarSub: { color: colores.primarioSuave, fontSize: 14 },
 });

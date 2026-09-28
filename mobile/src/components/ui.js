@@ -1,24 +1,28 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+// Paleta alineada al panel-admin y la TV (mockups verdes, marca "Checker").
 export const colores = {
-  fondo: '#F4F6FB',
-  primario: '#2563EB',
-  primarioSuave: '#E8EEFD',
-  acento: '#2563EB',
-  exito: '#0F7B4A',
-  exitoSuave: '#DDF5E8',
+  fondo: '#F6F9F7',
+  primario: '#186B4A',
+  primarioSuave: '#E3F3E9',
+  acento: '#3E9C6D',
+  exito: '#186B4A',
+  exitoSuave: '#E3F3E9',
+  advertencia: '#B7791F',
+  advertenciaSuave: '#FBF1DA',
   error: '#C62828',
   errorSuave: '#FDE7E7',
-  texto: '#1B1F24',
-  suave: '#5A6470',
-  borde: '#DCE3F0',
+  texto: '#16241C',
+  suave: '#5B6E64',
+  borde: '#DCE7E1',
   blanco: '#FFFFFF',
 };
 
 const TONOS = {
   primario: { fuerte: colores.primario, suave: colores.primarioSuave },
   exito: { fuerte: colores.exito, suave: colores.exitoSuave },
+  advertencia: { fuerte: colores.advertencia, suave: colores.advertenciaSuave },
   error: { fuerte: colores.error, suave: colores.errorSuave },
 };
 

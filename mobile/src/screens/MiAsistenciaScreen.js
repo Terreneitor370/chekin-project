@@ -103,7 +103,7 @@ export default function MiAsistenciaScreen({ route }) {
           <Tarjeta style={estilos.fila}>
             <Texto style={{ flex: 1, textTransform: 'capitalize' }}>{fecha(item.registradoEn)}</Texto>
             <Texto>{item.tipo === 'entrada' ? 'Entrada' : 'Salida'} {hora(item.registradoEn)}</Texto>
-            <Insignia texto={item.tarde ? 'Retardo' : 'A tiempo'} tono={item.tarde ? 'error' : 'exito'} />
+            <Insignia texto={item.tarde ? 'Retardo' : 'A tiempo'} tono={item.tarde ? 'advertencia' : 'exito'} />
           </Tarjeta>
         )}
       />
