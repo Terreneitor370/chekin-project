@@ -1,44 +1,48 @@
-# /dashboard-tv
+# Dashboard TV · Checker
 
-**Dueño:** Jorge Ramírez (Dev 3)
+Aplicación de Jorge (Dev 3). React, Vite, Tailwind CSS, Socket.IO y Lucide. Todos los cambios viven en dashboard-tv. Contrato de integración: ../docs/api.md.
 
-App web que se abre en el **navegador del Roku** (Opción A del profe): modo multimedia y modo checador en tiempo real.
-Se hizo con React + Vite (sin librerías pesadas) porque los navegadores del Roku tienen poca memoria.
+## Ejecutar
 
-## Correr en local
-
-```bash
-npm install
+```sh
+npm ci
 npm run dev
-# Abrir: http://localhost:5174/tv/?token=tv-demo-token-cambiar
 ```
 
-En producción Nginx la sirve en `https://<dominio>/tv/?token=<TV_TOKEN>`; esa es la URL que se abre en el Roku.
+Abrir http://localhost:5174/tv/?token=<TV_TOKEN> con un token válido del servidor. Vite conecta /api, /uploads y /socket.io a localhost:3000. Sin backend se muestra Reconectando; sin token, Pantalla sin vincular. No se muestran datos ficticios en producción.
 
-## Estructura
+VITE_API_URL, opcional en .env, es el origen del servidor (sin /api). Vacío usa el mismo origen de la página. El token procede de la URL, no se guarda en localStorage ni se agrega a dominios externos.
 
-```
-src/
-  App.jsx                   decide el modo visible
-  config.js                 token de la URL, tiempos, URL del API
-  hooks/useEstadoTv.js      GET /api/tv/estado + Socket.IO (nuevo-checkin, nuevo-aviso, nuevo-multimedia)
-  hooks/useModoPantalla.js  cola: anuncio 4 s por persona -> resumen 15 s -> multimedia (con useRef)
-  components/
-    ModoMultimedia.jsx      video muted en loop, reloj, contador, ticker
-    ModoAnuncio.jsx         foto + nombre + hora
-    ModoResumen.jsx         llegaron / faltan / tarde
-    Reloj.jsx, Ticker.jsx, Contador.jsx
-  styles.css                1920x1080, fuentes grandes, márgenes de 5%
+```sh
+npm run build
+npm run preview
 ```
 
-## Reglas para el Roku
+Publicar dist bajo /tv/. El servidor debe permitir Socket.IO y servir archivos multimedia. El frontend no modifica infraestructura.
 
-- Nada de interacción: todo es automático.
-- Video siempre `muted` (si no, el navegador bloquea el autoplay).
-- Al reconectar se vuelve a pedir el estado del día (sobrevive a reinicios y cortes).
-- Probar el Día 1 en el navegador del Roku; si no carga bien, contingencia: duplicar pantalla desde laptop.
+## Comportamiento
 
-## Pendientes (Jorge)
+- 1080p, safe area del 5%, texto mínimo de 32 px a resolución nativa, sin scroll. Fuentes del sistema sin descargas externas.
+- Videos ordenados, autoplay, muted y playsInline. Uno se repite; varios rotan. Se pausa durante registros y resúmenes. Videos fallidos se omiten hasta que cambie la lista. Sin contenido aparece una composición institucional en CSS.
+- nuevo-checkin: cola FIFO, cuatro segundos por persona, deduplicación con ventana de 1.000 IDs. Foto con alternativa de iniciales. Entrada, salida y tardanza diferenciadas.
+- Tras la cola: resumen de quince segundos, páginas automáticas de cinco filas y regreso a multimedia. Un nuevo registro interrumpe el resumen.
+- Reloj America/Hermosillo y avisos persistentes. nuevo-aviso y nuevo-multimedia reemplazan las listas.
+- Estado al iniciar y reconectar; reintentos HTTP, timeout, cancelación y actualización al cambiar el día. Eventos recibidos durante una consulta se reaplican.
+- Temporizadores en useRef con limpieza al desmontar. Un solo reproductor de video.
 
-- [ ] Probar en el navegador del Roku real (video, fotos, Socket.IO)
-- [ ] Ajustar tamaños y colores en la TV real
+## Límites del contrato
+
+nuevo-checkin incluye fotoUrl, pero no garantiza foto de perfil ni incluye puesto. Se muestra la foto recibida y el puesto solo si llega ese campo. Multimedia admite MP4; no se inventan endpoints de banners.
+
+## Validación
+
+```sh
+npx playwright install chromium
+npm test
+```
+
+Las pruebas usan un servidor simulado en memoria en el puerto 3000 (debe estar libre). No utilizan ni modifican /server. Cubren 1080p, fuentes, safe area, diez registros consecutivos, deduplicación, duración de anuncios, resumen, ticker, reconexión, reintentos HTTP, token ausente y medios fallidos. Capturas en test-results/.
+
+PLAYWRIGHT_CHROMIUM_EXECUTABLE permite usar un Chromium instalado. Playwright y Socket.IO server son dependencias de desarrollo y no forman parte del bundle.
+
+Pendiente: probar en Roku físico reproducción MP4, Socket.IO, memoria y lectura a distancia. El PDF propone duplicar pantalla desde Windows si el canal no es compatible. ES2017 no garantiza compatibilidad con todos los canales de navegador del Roku.

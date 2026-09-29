@@ -5,7 +5,7 @@ import { SesionProvider } from './api/sesion.jsx';
 import './styles.css';
 
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename="/admin">
+  <BrowserRouter basename="/admin/">
     <SesionProvider>
       <App />
     </SesionProvider>

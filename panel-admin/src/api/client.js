@@ -1,28 +1,19 @@
-// Cliente del API según docs/api.md. Maneja el formato de error { error: { codigo, mensaje } }.
-export const API_URL = import.meta.env.VITE_API_URL || '';
-
+﻿export const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 export function crearApi(obtenerToken, alExpirar) {
-  async function pedir(metodo, ruta, cuerpo) {
-    const headers = {};
+  async function pedir(method, path, data, { signal } = {}) {
     const token = obtenerToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     let body;
-    if (cuerpo instanceof FormData) body = cuerpo;
-    else if (cuerpo !== undefined) {
-      headers['Content-Type'] = 'application/json';
-      body = JSON.stringify(cuerpo);
-    }
-    const r = await fetch(`${API_URL}/api${ruta}`, { method: metodo, headers, body });
-    if (r.status === 401 && token) alExpirar();
-    const tipo = r.headers.get('content-type') ?? '';
-    const datos = tipo.includes('application/json') ? await r.json() : await r.text();
-    if (!r.ok) throw new Error(datos?.error?.mensaje ?? `Error ${r.status}`);
-    return datos;
+    if (data instanceof FormData) body = data;
+    else if (data !== undefined) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(data); }
+    let response;
+    try { response = await fetch(`${API_URL}/api${path}`, { method, headers, body, signal }); }
+    catch (error) { if (error.name === 'AbortError') throw error; throw new Error('No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.'); }
+    if (response.status === 401 && token) alExpirar(token);
+    const type = response.headers.get('content-type') || '';
+    const result = response.status === 204 ? null : type.includes('application/json') ? await response.json() : await response.text();
+    if (!response.ok) throw new Error(result?.error?.mensaje || `No se pudo completar la solicitud (${response.status}).`);
+    return result;
   }
-  return {
-    get: (ruta) => pedir('GET', ruta),
-    post: (ruta, cuerpo) => pedir('POST', ruta, cuerpo),
-    put: (ruta, cuerpo) => pedir('PUT', ruta, cuerpo),
-    del: (ruta) => pedir('DELETE', ruta),
-  };
+  return { get: (path, options) => pedir('GET', path, undefined, options), post: (path, data, options) => pedir('POST', path, data, options), put: (path, data) => pedir('PUT', path, data), del: path => pedir('DELETE', path) };
 }

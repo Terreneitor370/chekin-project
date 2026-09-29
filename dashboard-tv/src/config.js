@@ -12,6 +12,10 @@ export const TIEMPOS = {
 // Agrega el token de la TV a las URLs de fotos protegidas
 export function urlConToken(ruta) {
   if (!ruta) return null;
-  const sep = ruta.includes('?') ? '&' : '?';
-  return `${API_URL}${ruta}${ruta.includes('token=') ? '' : `${sep}token=${encodeURIComponent(TV_TOKEN)}`}`;
+  try {
+    const url = new URL(ruta, API_URL);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    if (url.origin === new URL(API_URL).origin && !url.searchParams.has('token')) url.searchParams.set('token', TV_TOKEN);
+    return url.href;
+  } catch { return null; }
 }
