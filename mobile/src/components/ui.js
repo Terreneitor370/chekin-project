@@ -1,4 +1,5 @@
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 // Paleta alineada al panel-admin y la TV (mockups verdes, marca "Checker").
@@ -53,25 +54,45 @@ export function Tarjeta({ children, style }) {
 }
 
 // Círculo grande con un icono (huella, palomita, error) rodeado de un halo suave.
+// Entra con un pequeño "pop" (escala + fade) en vez de aparecer de golpe.
 export function IconoEstado({ nombre, tono = 'primario', tamano = 120 }) {
   const { fuerte, suave } = TONOS[tono];
   const interior = tamano * 0.62;
+  const entrada = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(entrada, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 9 }).start();
+  }, [entrada]);
+
   return (
-    <View style={[estilos.halo, { width: tamano, height: tamano, borderRadius: tamano / 2, backgroundColor: suave }]}>
+    <Animated.View
+      style={[
+        estilos.halo,
+        { width: tamano, height: tamano, borderRadius: tamano / 2, backgroundColor: suave },
+        { opacity: entrada, transform: [{ scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }] },
+      ]}
+    >
       <View style={{ width: interior, height: interior, borderRadius: interior / 2, backgroundColor: fuerte, alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name={nombre} size={interior * 0.55} color={colores.blanco} />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
-// Barra "Paso 1 de 2" del registro.
+// Barra "Paso 1 de 2" del registro. El relleno se desliza al nuevo porcentaje
+// en vez de saltar directo.
 export function Progreso({ paso, total }) {
+  const ancho = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(ancho, { toValue: paso / total, duration: 350, useNativeDriver: false }).start();
+  }, [ancho, paso, total]);
+
   return (
     <View style={estilos.progreso}>
       <Text style={estilos.progresoTexto}>Paso {paso} de {total}</Text>
       <View style={estilos.progresoPista}>
-        <View style={[estilos.progresoRelleno, { width: `${(paso / total) * 100}%` }]} />
+        <Animated.View style={[estilos.progresoRelleno, { width: ancho.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
       </View>
     </View>
   );
@@ -89,24 +110,33 @@ export function Insignia({ texto, tono = 'exito' }) {
 export function Boton({ titulo, onPress, cargando = false, variante = 'primario', deshabilitado = false, icono }) {
   const fondo = variante === 'secundario' ? colores.blanco : colores.primario;
   const color = variante === 'secundario' ? colores.primario : colores.blanco;
+  const escala = useRef(new Animated.Value(1)).current;
+  const presionar = (hacia) => Animated.spring(escala, { toValue: hacia, useNativeDriver: true, speed: 50, bounciness: 6 }).start();
+
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => presionar(0.96)}
+      onPressOut={() => presionar(1)}
       disabled={cargando || deshabilitado}
-      style={({ pressed }) => [
-        estilos.boton,
-        { backgroundColor: fondo, opacity: pressed || deshabilitado ? 0.7 : 1 },
-        variante === 'secundario' && estilos.botonSecundario,
-      ]}
+      style={({ pressed }) => ({ opacity: pressed || deshabilitado ? 0.7 : 1 })}
     >
-      {cargando ? (
-        <ActivityIndicator color={color} />
-      ) : (
-        <View style={estilos.botonContenido}>
-          {icono && <Ionicons name={icono} size={22} color={color} />}
-          <Text style={[estilos.botonTexto, { color }]}>{titulo}</Text>
-        </View>
-      )}
+      <Animated.View
+        style={[
+          estilos.boton,
+          { backgroundColor: fondo, transform: [{ scale: escala }] },
+          variante === 'secundario' && estilos.botonSecundario,
+        ]}
+      >
+        {cargando ? (
+          <ActivityIndicator color={color} />
+        ) : (
+          <View style={estilos.botonContenido}>
+            {icono && <Ionicons name={icono} size={22} color={color} />}
+            <Text style={[estilos.botonTexto, { color }]}>{titulo}</Text>
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
