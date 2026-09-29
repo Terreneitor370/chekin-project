@@ -36,27 +36,60 @@ router.get('/', requireRol('supervisor'), async (_req, res) => {
   res.json(filas);
 });
 
+// empleados.email es UNIQUE. Sin esto, repetir un correo devolvía 500 con el error
+// crudo de MySQL; el contrato pide 409 con mensaje en español.
+async function exigirEmailLibre(email, idExcluido = null) {
+  if (!email) return;
+  const [repetido] = await query(
+    'SELECT id FROM empleados WHERE email = ? AND (? IS NULL OR id <> ?)',
+    [email, idExcluido, idExcluido],
+  );
+  if (repetido) throw errores.emailDuplicado();
+}
+
+// Red de seguridad: si dos altas con el mismo correo corren a la vez, el UNIQUE
+// salta en MySQL y el translate lo convierte en el mismo 409.
+function traducirDuplicado(e) {
+  if (e?.code === 'ER_DUP_ENTRY' && /empleados\.email/.test(e.sqlMessage ?? '')) {
+    return errores.emailDuplicado();
+  }
+  return e;
+}
+
 // POST /api/empleados
 router.post('/', requireRol('admin'), validar(esquemaCrearEmpleado), async (req, res) => {
   const { nombre, email = null, horaEntrada, toleranciaMin } = req.body;
-  const r = await query(
-    'INSERT INTO empleados (nombre, email, hora_entrada, tolerancia_min) VALUES (?, ?, ?, ?)',
-    [nombre, email, horaEntrada, toleranciaMin],
-  );
+  await exigirEmailLibre(email);
+  let r;
+  try {
+    r = await query(
+      'INSERT INTO empleados (nombre, email, hora_entrada, tolerancia_min) VALUES (?, ?, ?, ?)',
+      [nombre, email, horaEntrada, toleranciaMin],
+    );
+  } catch (e) {
+    throw traducirDuplicado(e);
+  }
   res.status(201).json({ id: r.insertId });
 });
 
 // PUT /api/empleados/:id
 router.put('/:id', requireRol('admin'), validar(idParam, 'params'), validar(esquemaActualizarEmpleado), async (req, res) => {
   const { nombre, email, horaEntrada, toleranciaMin, activo } = req.body;
-  await query(
-    `UPDATE empleados SET
-       nombre = COALESCE(?, nombre), email = COALESCE(?, email),
-       hora_entrada = COALESCE(?, hora_entrada), tolerancia_min = COALESCE(?, tolerancia_min),
-       activo = COALESCE(?, activo)
-     WHERE id = ?`,
-    [nombre ?? null, email ?? null, horaEntrada ?? null, toleranciaMin ?? null, activo === undefined ? null : (activo ? 1 : 0), req.params.id],
-  );
+  // Excluyo el propio id: reenviar el mismo correo del empleado que se está
+  // editando no es un conflicto.
+  await exigirEmailLibre(email, req.params.id);
+  try {
+    await query(
+      `UPDATE empleados SET
+         nombre = COALESCE(?, nombre), email = COALESCE(?, email),
+         hora_entrada = COALESCE(?, hora_entrada), tolerancia_min = COALESCE(?, tolerancia_min),
+         activo = COALESCE(?, activo)
+       WHERE id = ?`,
+      [nombre ?? null, email ?? null, horaEntrada ?? null, toleranciaMin ?? null, activo === undefined ? null : (activo ? 1 : 0), req.params.id],
+    );
+  } catch (e) {
+    throw traducirDuplicado(e);
+  }
   res.json({ ok: true });
 });
 

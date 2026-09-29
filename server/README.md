@@ -52,9 +52,10 @@ uploads/                registro/ (privada), checkins/ (con token), multimedia/ 
 npm test
 ```
 
-58 pruebas de `validacion`, `firma` y `tiempo`. No necesitan MySQL ni face-service,
-solo que exista `server/.env` (lo carga `src/config.js`). Son las que se ejecutan
-antes de cada PR.
+71 pruebas de `validacion`, `firma`, `tiempo` y `base64-android`. No necesitan MySQL
+ni face-service, y tampoco `server/.env`: `tiempo.test.js` corre en un clon limpio
+porque `utils/tiempo.js` ya no importa `config.js`. Son las que se ejecutan antes de
+cada PR.
 
 ## Prueba del Día 1
 
@@ -67,7 +68,13 @@ npm run probar-firma -- "<llavePublica>" "<reto>" "<firma>"
 ## Pendientes (Kassandra)
 
 - [x] Validar cuerpos de petición con un esquema (zod) → `src/validacion.js`
-- [x] Pruebas de `validacion`, `firma` y `tiempo` → `test/`
+- [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (71)
+- [x] `email: ""` del panel → `null` (no 400 por un campo que quedó en blanco)
+- [x] `409 EMAIL_DUPLICADO` cuando el correo ya pertenece a otro empleado
+- [ ] `GET/POST/PUT /api/usuarios` (solo admin) — pendiente, va sobre el main ya integrado
+- [ ] `POST /api/mi/sesion` y `GET /api/mi/asistencia` (token de empleado, 8 h)
+- [ ] `tokenEmpleado` en la respuesta de `POST /api/checkin`
+- [ ] Correr `database/migraciones/001_roles.sql` (una sola vez) cuando llegue a main
 - [ ] Probar el flujo completo con el face-service real (requiere `/face-service` de Jeshua)
 - [ ] Revisar mensajes de error con Isabel (app) y Jorge (panel)
 

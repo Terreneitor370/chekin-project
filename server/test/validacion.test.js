@@ -17,6 +17,7 @@ import {
   retoQuery,
   vincular,
 } from '../src/validacion.js';
+import { errores } from '../src/utils/errores.js';
 
 // Devuelve el mensaje de error o null si el valor es válido.
 function falla(esquema, valor) {
@@ -193,6 +194,23 @@ describe('empleados', () => {
     const r = crearEmpleado.safeParse({ nombre: 'X', email: 'kassandra@checador.local' });
     assert.equal(r.success, true);
     assert.equal(r.data.email, 'kassandra@checador.local');
+  });
+});
+
+// El UNIQUE de empleados.email lo vigila la ruta (src/routes/empleados.js), que
+// devuelve 409 EMAIL_DUPLICADO en vez de dejar subir el ER_DUP_ENTRY de MySQL como
+// 500. Aquí se comprueba que el error existe y tiene la forma del contrato.
+describe('correo duplicado', () => {
+  it('el error de correo duplicado es 409 EMAIL_DUPLICADO con mensaje en español', () => {
+    const e = errores.emailDuplicado();
+    assert.equal(e.status, 409);
+    assert.equal(e.codigo, 'EMAIL_DUPLICADO');
+    // el texto viaja en .message; errorHandler lo serializa como "mensaje"
+    assert.match(e.message, /correo/i);
+  });
+
+  it('un correo repetido no lo rechaza el esquema: eso lo decide la BD con el 409', () => {
+    assert.equal(falla(crearEmpleado, { nombre: 'X', email: 'isabel@checador.local' }), null);
   });
 });
 
