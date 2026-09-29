@@ -1,9 +1,9 @@
 // Cámara frontal con guía ovalada. Devuelve la URI de la foto ya comprimida.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { MotiView } from 'moti';
 import { comprimir } from '../services/imagen';
 import { Boton, Pantalla, Tarjeta, Texto, colores } from './ui';
 
@@ -11,6 +11,16 @@ export default function CamaraFrontal({ titulo = 'Mira a la cámara', instruccio
   const [permiso, pedirPermiso] = useCameraPermissions();
   const camara = useRef(null);
   const [tomando, setTomando] = useState(false);
+
+  // Pulso suave del óvalo: invita a acercar el rostro en vez de un aro estático.
+  const pulso = useSharedValue(0);
+  useEffect(() => {
+    pulso.value = withRepeat(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [pulso]);
+  const estiloOvalo = useAnimatedStyle(() => ({
+    opacity: 0.55 + pulso.value * 0.45,
+    transform: [{ scale: 0.97 + pulso.value * 0.03 }],
+  }));
 
   if (!permiso) return <Pantalla />;
   if (!permiso.granted) {
@@ -42,14 +52,7 @@ export default function CamaraFrontal({ titulo = 'Mira a la cámara', instruccio
         </View>
         <Texto style={estilos.instruccion}>{instruccion}</Texto>
       </Tarjeta>
-      {/* Pulso suave para invitar a acercar el rostro, no un simple aro estático. */}
-      <MotiView
-        style={estilos.ovalo}
-        pointerEvents="none"
-        from={{ opacity: 0.55, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'timing', duration: 1100, loop: true, repeatReverse: true }}
-      />
+      <Animated.View style={[estilos.ovalo, estiloOvalo]} pointerEvents="none" />
       <View style={estilos.panel}>
         <Boton titulo={textoBoton} icono="camera-outline" onPress={tomar} cargando={tomando} />
       </View>
