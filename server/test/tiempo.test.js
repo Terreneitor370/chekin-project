@@ -3,7 +3,7 @@
 // negocio no se pueden calcular con las horas del servidor.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { esTarde, fechaNegocio, horaNegocio, rangoDelDia } from '../src/utils/tiempo.js';
+import { esTarde, fechaNegocio, horaNegocio, rangoDelDia, restarDias } from '../src/utils/tiempo.js';
 
 // Instante UTC que en Hermosillo (UTC-7) cae a una hora local dada.
 const enHermosillo = (hh, mm) => new Date(Date.UTC(2026, 8, 25, hh + 7, mm, 0));
@@ -76,5 +76,29 @@ describe('esTarde', () => {
     assert.equal(esTarde('09:00:00', 15, enHermosillo(9, 16)), true);
     assert.equal(esTarde('09:00:00', 0, enHermosillo(9, 0)), false);
     assert.equal(esTarde('09:00:00', 0, enHermosillo(9, 1)), true);
+  });
+});
+
+// Un rango de "últimos 7 días" salía con 8 días: al restar sobre un instante UTC y
+// volver a Hermosillo (UTC-7) el medianoche retrocede al día anterior.
+describe('restarDias', () => {
+  it('resta días sin corrimiento de zona horaria', () => {
+    assert.equal(restarDias('2026-09-29', 6), '2026-09-23');
+    assert.equal(restarDias('2026-09-29', 7), '2026-09-22');
+    assert.equal(restarDias('2026-09-01', 1), '2026-08-31');
+    assert.equal(restarDias('2026-01-01', 1), '2025-12-31');
+    assert.equal(restarDias('2026-03-01', 1), '2026-02-28');
+  });
+
+  it('con 6 días de resta, desde..hasta son exactamente 7 días', () => {
+    const hasta = '2026-09-29';
+    const desde = restarDias(hasta, 6);
+    const dias = (Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000;
+    assert.equal(dias, 6);
+    assert.equal(Number(hasta.slice(8)) - Number(desde.slice(8)), 6);
+  });
+
+  it('con 0 días devuelve la misma fecha', () => {
+    assert.equal(restarDias('2026-09-29', 0), '2026-09-29');
   });
 });

@@ -118,6 +118,35 @@ export const checkin = z.object({
   idempotencyKey: z.uuid('el idempotencyKey debe ser un UUID'), // CHAR(36) UNIQUE en la BD
 });
 
+// --- 4.1 "Mi asistencia" (rol empleado) -------------------------------------
+// Abre la pantalla sin hacer check-in: mismo reto y misma firma que el check-in,
+// solo que no pasa por DeepFace. No lleva idempotencyKey porque no registra nada.
+export const miSesion = z.object({
+  empleadoId: id,
+  retoId: id,
+  firma: z
+    .string({ error: 'falta la firma' })
+    .min(1, 'la firma está vacía')
+    .max(4096, 'la firma es demasiado larga'),
+});
+
+// Sin fechas: últimos 7 días. hasta >= desde siempre; el tope de un año evita que
+// alguien pida la historia entera y se lleve la tabla en una sola respuesta.
+export const miAsistencia = z
+  .object({
+    desde: fecha.optional(),
+    hasta: fecha.optional(),
+  })
+  .refine((d) => !d.desde || !d.hasta || d.desde <= d.hasta, {
+    message: 'la fecha inicial no puede ser posterior a la final',
+    path: ['desde'],
+  })
+  .refine((d) => {
+    if (!d.desde || !d.hasta) return true;
+    const dias = (new Date(`${d.hasta}T00:00:00Z`) - new Date(`${d.desde}T00:00:00Z`)) / 86400000;
+    return dias <= 366;
+  }, { message: 'el rango no puede ser mayor a un año', path: ['desde'] });
+
 // --- 6. Panel admin ---------------------------------------------------------
 // El token de la TV no se valida aquí a propósito: un token faltante o vencido es
 // 401 NO_AUTENTICADO según docs/api.md, no 400.

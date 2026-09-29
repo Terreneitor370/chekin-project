@@ -4,10 +4,10 @@ import { query, pool } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { subirImagen, exigirImagen } from '../middlewares/upload.js';
 import { validar } from '../middlewares/validar.js';
-import { verificarFirma } from '../services/firma.js';
 import { verificarRostro } from '../services/faceClient.js';
 import { guardarArchivo, leerArchivo } from '../services/archivos.js';
 import { clasificarRegistro } from '../services/asistencia.js';
+import { consumirReto, verificarFirmaConHuella, firmarTokenEmpleado } from '../services/sesionEmpleado.js';
 import { emitirTv, EVENTOS } from '../services/eventos.js';
 import { estadoDelDia } from '../services/estadoTv.js';
 import { checkin as esquemaCheckin, retoQuery } from '../validacion.js';
@@ -35,24 +35,18 @@ router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), validar(e
      FROM checkins c JOIN empleados e ON e.id = c.empleado_id WHERE c.idempotency_key = ?`,
     [idempotencyKey],
   );
-  if (previo) return res.status(201).json(respuesta(previo));
+  if (previo) {
+    // Reintento de red: el cliente nunca vio la respuesta original, así que se le
+    // vuelve a dar el token. Si no, el empleado tuvo que firmar otra vez solo para
+    // poder abrir "Mi asistencia" (docs/api.md, sección 4.1).
+    return res.status(201).json({ ...respuesta(previo), tokenEmpleado: firmarTokenEmpleado(previo.empleadoId) });
+  }
 
   // 1. Reto válido, del mismo empleado, no usado y no expirado (se marca usado de inmediato)
-  const marcado = await query(
-    'UPDATE retos SET usado = 1 WHERE id = ? AND empleado_id = ? AND usado = 0 AND expira_en > UTC_TIMESTAMP()',
-    [retoId, empleadoId],
-  );
-  if (marcado.affectedRows !== 1) throw errores.retoInvalido();
-  const [reto] = await query('SELECT valor FROM retos WHERE id = ?', [retoId]);
+  const valorReto = await consumirReto({ retoId, empleadoId });
 
   // 2. Firma con la huella: identifica al usuario
-  const [huella] = await query(
-    'SELECT id, llave_publica FROM huellas WHERE empleado_id = ? AND activa = 1 ORDER BY id DESC LIMIT 1',
-    [empleadoId],
-  );
-  if (!huella || !verificarFirma({ llavePublica: huella.llave_publica, payload: reto.valor, firma })) {
-    throw errores.firmaInvalida();
-  }
+  const huella = await verificarFirmaConHuella({ empleadoId, payload: valorReto, firma });
 
   // 3. Rostro: DeepFace compara la foto de registro con la selfie (1 a 1)
   const [empleado] = await query(
@@ -93,6 +87,8 @@ router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), validar(e
     checkin: { id: ins.insertId, tipo, tarde, registradoEn: ahora },
     empleado: { id: empleado.id, nombre: empleado.nombre },
     verificacion: { verificado: true, distancia: rostro.distance ?? null, esReal: rostro.is_real ?? null },
+    // Para abrir "Mi asistencia" sin volver a pedir la huella.
+    tokenEmpleado: firmarTokenEmpleado(empleado.id),
   });
 });
 

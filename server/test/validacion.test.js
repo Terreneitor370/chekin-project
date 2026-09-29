@@ -14,6 +14,8 @@ import {
   checkinsQuery,
   idParam,
   login,
+  miAsistencia,
+  miSesion,
   registrarBiometria,
   reporteAsistencia,
   retoQuery,
@@ -247,6 +249,40 @@ describe('nombre de persona', () => {
     const r = crearEmpleado.safeParse({ nombre: 'X', email: 'kassandra@checador.local' });
     assert.equal(r.success, true);
     assert.equal(r.data.email, 'kassandra@checador.local');
+  });
+});
+
+// "Mi asistencia" (docs/api.md 4.1). Sin fechas son los últimos 7 días, y el
+// empleado sale del token, así que aquí no hay ningún id en los parámetros.
+describe('mi asistencia', () => {
+  it('pide empleadoId, retoId y firma para abrir la sesión', () => {
+    // el campo que falló va en path, el mensaje es genérico ("debe ser un número")
+    const campos = (v) => miSesion.safeParse(v).error.issues.map((i) => i.path.join('.'));
+    assert.ok(campos({}).includes('empleadoId'));
+    assert.ok(campos({}).includes('retoId'));
+    assert.match(falla(miSesion, { empleadoId: 1, retoId: 1 }), /firma/);
+    assert.equal(falla(miSesion, { empleadoId: 3, retoId: 1543, firma: 'abc' }), null);
+  });
+
+  it('acepta el rango por defecto, sin fechas', () => {
+    assert.equal(falla(miAsistencia, {}), null);
+  });
+
+  it('acepta un rango con los dos bordes', () => {
+    assert.equal(falla(miAsistencia, { desde: '2026-09-01', hasta: '2026-09-29' }), null);
+  });
+
+  it('rechaza fechas al revés', () => {
+    assert.notEqual(falla(miAsistencia, { desde: '2026-09-29', hasta: '2026-09-01' }), null);
+  });
+
+  it('rechaza rangos de más de un año', () => {
+    assert.notEqual(falla(miAsistencia, { desde: '2024-01-01', hasta: '2026-01-01' }), null);
+  });
+
+  it('rechaza fechas que no existen', () => {
+    assert.notEqual(falla(miAsistencia, { desde: '2026-13-45' }), null);
+    assert.notEqual(falla(miAsistencia, { hasta: '2026-02-30' }), null);
   });
 });
 

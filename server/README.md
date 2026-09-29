@@ -52,7 +52,7 @@ uploads/                registro/ (privada), checkins/ (con token), multimedia/ 
 npm test
 ```
 
-79 pruebas de `validacion`, `firma`, `tiempo` y `base64-android`. No necesitan MySQL
+95 pruebas de `validacion`, `firma`, `tiempo` y `base64-android`. No necesitan MySQL
 ni face-service, y tampoco `server/.env`: `tiempo.test.js` corre en un clon limpio
 porque `utils/tiempo.js` ya no importa `config.js`. Son las que se ejecutan antes de
 cada PR.
@@ -68,13 +68,32 @@ npm run probar-firma -- "<llavePublica>" "<reto>" "<firma>"
 ## Pendientes (Kassandra)
 
 - [x] Validar cuerpos de petición con un esquema (zod) → `src/validacion.js`
-- [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (71)
+- [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (95)
 - [x] `email: ""` del panel → `null` (no 400 por un campo que quedó en blanco)
 - [x] `409 EMAIL_DUPLICADO` cuando el correo ya pertenece a otro empleado
 - [x] `GET/POST/PUT /api/usuarios` (solo admin) → `src/routes/usuarios.js`
-- [ ] `POST /api/mi/sesion` y `GET /api/mi/asistencia` (token de empleado, 8 h)
-- [ ] `tokenEmpleado` en la respuesta de `POST /api/checkin`
+- [x] `POST /api/mi/sesion` y `GET /api/mi/asistencia` (token de empleado, 8 h) → `src/routes/mi.js`
+- [x] `tokenEmpleado` en la respuesta de `POST /api/checkin`
 - [x] Migración `001_roles.sql` aplicada en el 3307 local (una sola vez)
+
+## Detalles de `/api/mi/...`
+
+`POST /api/mi/sesion` no pasa por DeepFace: es para abrir "Mi asistencia" y solo
+prueba que la firma salió de la llave que ese empleado registró en ese celular
+(reto de un solo uso + `SHA256withRSA`). El check-in sigue con rostro.
+
+El token que devuelve lleva `tipo: 'empleado'`, así que `requireRol()` del panel lo
+rechaza y `requireEmpleado()` rechaza los tokens de admin y supervisor: cada rol solo
+abre lo suyo. El `empleadoId` sale del token, nunca de la URL, para que nadie lea el
+registro de otro. Si al empleado lo dan de baja, el token deja de servir de inmediato
+aunque le quedaran horas de vigencia.
+
+La comprobación del reto y de la firma vive en `src/services/sesionEmpleado.js` y la
+usan tanto el check-in como `/api/mi/sesion`, para que no se desincronicen.
+
+`restarDias()` en `utils/tiempo.js` hace aritmética de calendario pura a propósito:
+restar sobre un instante UTC y volver a Hermosillo (UTC-7) quitaba un día y "últimos
+7 días" terminaba cubriendo 8.
 
 ## Detalles de `/api/usuarios`
 

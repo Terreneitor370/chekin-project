@@ -22,6 +22,16 @@ export function rangoDelDia(fecha = fechaNegocio()) {
   return { inicio, fin };
 }
 
+// Resta N días a una fecha YYYY-MM-DD como calendario puro, sin pasar por la zona
+// horaria. Restar sobre un instante UTC y volver a formatear en Hermosillo quita
+// un día (el medianoche UTC del lunes es el domingo 17:00 aquí), que es como un
+// rango de "últimos 7 días" terminaba cubriendo 8.
+export function restarDias(fecha, dias) {
+  const d = new Date(`${fecha}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - dias);
+  return d.toISOString().slice(0, 10);
+}
+
 // ¿La hora local supera hora_entrada + tolerancia?
 export function esTarde(horaEntrada, toleranciaMin, date = new Date()) {
   const [h, m] = horaEntrada.split(':').map(Number);
