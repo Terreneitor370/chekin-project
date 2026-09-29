@@ -303,6 +303,19 @@ describe('correo duplicado', () => {
   });
 });
 
+// Un PUT/DELETE contra un id que no existe tiene que decir 404 y no un 200 con
+// {ok:true}, que hacia que el panel mostrara "guardado" sin guardar nada. El
+// comportamiento en si se comprueba contra la API viva (verificar-404.js); aqui se
+// fija la forma del error que devuelve src/db.js mediante modificar().
+describe('id inexistente en un PUT o DELETE', () => {
+  it('el error es 404 NO_ENCONTRADO con mensaje en español', () => {
+    const e = errores.noEncontrado('Empleado no encontrado');
+    assert.equal(e.status, 404);
+    assert.equal(e.codigo, 'NO_ENCONTRADO');
+    assert.equal(e.message, 'Empleado no encontrado');
+  });
+});
+
 // Usuarios.jsx de Jorge llama a PUT /api/usuarios/:id con dos cuerpos distintos:
 //   editar   -> { rol, password? }
 //   desactivar -> { activo: false }

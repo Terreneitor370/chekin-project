@@ -12,7 +12,7 @@ Fuente de verdad entre `/mobile`, `/server`, `/dashboard-tv`, `/panel-admin` y `
 | Rol | Dónde vive | Cómo entra | Qué puede hacer |
 |---|---|---|---|
 | `admin` | tabla `usuarios` | Panel web (email + contraseña) | Todo: registra usuarios del panel y empleados, genera códigos de registro, desactiva, avisos, multimedia, reportes |
-| `supervisor` | tabla `usuarios` | Panel web (email + contraseña) | Lo mismo que admin **excepto** crear, registrar o desactivar usuarios y empleados, y generar códigos de registro |
+| `supervisor` | tabla `usuarios` | Panel web (email + contraseña) | Ve y opera el día a día: check-ins, reportes, avisos, multimedia y empleados. **No** crea, edita ni desactiva empleados, **no** edita ni desactiva multimedia, y **no** toca usuarios |
 | `empleado` | tabla `empleados` | App móvil (huella + rostro, sin contraseña) | Hacer check-in y ver su propio dashboard (`/api/mi/...`) |
 
 Si un admin o supervisor también checa, además necesita su registro en `empleados` y su teléfono vinculado.
@@ -200,19 +200,27 @@ Se llama al cargar la página y cada vez que el socket se reconecta.
 | PUT | `/api/usuarios/:id` | Sí | No | Cambiar rol, contraseña o desactivar |
 | GET | `/api/empleados` | Sí | Sí | Lista con estado de huella y foto |
 | POST | `/api/empleados` | Sí | No | Crear `{ nombre, email, horaEntrada: "08:00", toleranciaMin: 10 }` |
-| PUT | `/api/empleados/:id` | Sí | Sí | Editar horario y datos (no activa ni desactiva) |
+| PUT | `/api/empleados/:id` | Sí | **No** | Editar horario y datos (no activa ni desactiva) |
 | DELETE | `/api/empleados/:id` | Sí | No | Desactivar (no se borra el historial) |
 | POST | `/api/empleados/:id/codigo` | Sí | No | Código de registro `{ "codigo": "482913", "expiraEn": "..." }` |
 | GET | `/api/checkins?fecha=YYYY-MM-DD` | Sí | Sí | Check-ins del día (sin fecha = hoy) |
 | GET/POST | `/api/avisos` | Sí | Sí | Listar / crear `{ mensaje, fechaInicio, fechaFin }` |
 | PUT/DELETE | `/api/avisos/:id` | Sí | Sí | Editar / desactivar |
 | GET/POST | `/api/multimedia` | Sí | Sí | Listar / subir MP4 (multipart `video`, `titulo`, `orden`) |
-| PUT/DELETE | `/api/multimedia/:id` | Sí | Sí | Orden / desactivar |
+| PUT/DELETE | `/api/multimedia/:id` | Sí | **No** | Orden / desactivar |
 | GET | `/api/reportes/asistencia?desde&hasta&formato=json\|csv` | Sí | Sí | Historial; `formato` solo acepta `json` o `csv` |
+
+Los tres "No" en negritas son decisión del equipo: el supervisor **no** edita empleados
+ni toca multimedia, aunque antes esta tabla decía que sí. Se decidió dejar el código
+como está, así que la tabla se ajustó para que el contrato no prometa permisos que el
+servidor no da. Si un supervisor abre el formulario de edición de un empleado, ve la
+pantalla normal pero al guardar recibe `403 SIN_PERMISO`: es lo esperado.
 
 Reglas de los `PUT`:
 - Solo se actualizan los campos enviados. Enviar `null` **no** borra un campo.
 - `activo` acepta `0`/`1` o `true`/`false`.
+- Si el `:id` no existe, los `PUT` y los `DELETE` devuelven `404 NO_ENCONTRADO` (no
+  un `200` vacío: antes un id inexistente contestaba "guardado" sin guardar nada).
 
 ## 7. Eventos Socket.IO
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query } from '../db.js';
+import { query, modificar } from '../db.js';
 import { requireRol } from '../middlewares/auth.js';
 import { validar } from '../middlewares/validar.js';
 import { avisosActivos } from '../services/estadoTv.js';
@@ -33,17 +33,18 @@ router.post('/', validar(esquemaCrearAviso), async (req, res) => {
 
 router.put('/:id', validar(idParam, 'params'), validar(esquemaActualizarAviso), async (req, res) => {
   const { mensaje, activo, fechaInicio, fechaFin } = req.body;
-  await query(
+  await modificar(
     `UPDATE avisos SET mensaje = COALESCE(?, mensaje), activo = COALESCE(?, activo),
        fecha_inicio = COALESCE(?, fecha_inicio), fecha_fin = COALESCE(?, fecha_fin) WHERE id = ?`,
     [mensaje ?? null, activo === undefined ? null : (activo ? 1 : 0), fechaInicio ?? null, fechaFin ?? null, req.params.id],
+    'Aviso no encontrado',
   );
   await notificarTv();
   res.json({ ok: true });
 });
 
 router.delete('/:id', validar(idParam, 'params'), async (req, res) => {
-  await query('UPDATE avisos SET activo = 0 WHERE id = ?', [req.params.id]);
+  await modificar('UPDATE avisos SET activo = 0 WHERE id = ?', [req.params.id], 'Aviso no encontrado');
   await notificarTv();
   res.json({ ok: true });
 });

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { query } from '../db.js';
+import { query, modificar } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { requireRol } from '../middlewares/auth.js';
 import { validar } from '../middlewares/validar.js';
@@ -68,7 +68,7 @@ router.put('/:id', validar(idParam, 'params'), validar(actualizarUsuario), async
   await exigirCorreoLibre(email, req.params.id);
   const hash = password ? await bcrypt.hash(password, 12) : null;
   try {
-    await query(
+    await modificar(
       `UPDATE usuarios SET
          email = COALESCE(?, email),
          password_hash = COALESCE(?, password_hash),
@@ -76,6 +76,7 @@ router.put('/:id', validar(idParam, 'params'), validar(actualizarUsuario), async
          activo = COALESCE(?, activo)
        WHERE id = ?`,
       [email ?? null, hash, rol ?? null, activo === undefined ? null : (activo ? 1 : 0), req.params.id],
+      'Usuario no encontrado',
     );
   } catch (e) {
     throw traducirDuplicado(e);

@@ -65,15 +65,31 @@ npm run probar-firma
 npm run probar-firma -- "<llavePublica>" "<reto>" "<firma>"
 ```
 
+## Scripts que necesitan la API viva
+
+`npm test` es puro (no toca MySQL ni face-service). Estas dos comprobaciones sí
+levantan la API, así que van aparte:
+
+```bash
+npm start                      # en otra terminal
+node scripts/verificar-5-3.js  # la lista del PDF, 33 pruebas
+node scripts/verificar-404.js  # los PUT/DELETE con un id inexistente
+```
+
+`verificar-404.js` crea su propio aviso y lo borra al final: no toca los datos
+semilla.
+
 ## Pendientes (Kassandra)
 
 - [x] Validar cuerpos de petición con un esquema (zod) → `src/validacion.js`
-- [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (95)
+- [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (96)
 - [x] `email: ""` del panel → `null` (no 400 por un campo que quedó en blanco)
 - [x] `409 EMAIL_DUPLICADO` cuando el correo ya pertenece a otro empleado
 - [x] `GET/POST/PUT /api/usuarios` (solo admin) → `src/routes/usuarios.js`
 - [x] `POST /api/mi/sesion` y `GET /api/mi/asistencia` (token de empleado, 8 h) → `src/routes/mi.js`
 - [x] `tokenEmpleado` en la respuesta de `POST /api/checkin`
+- [x] `404 NO_ENCONTRADO` en los PUT/DELETE con un id inexistente → `modificar()` en `src/db.js`
+- [x] Tabla de permisos de `docs/api.md` ajustada al código (el supervisor no edita empleados ni multimedia)
 - [x] Migración `001_roles.sql` aplicada en el 3307 local (una sola vez)
 
 ## Detalles de `/api/mi/...`

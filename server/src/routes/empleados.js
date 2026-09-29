@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
-import { query } from '../db.js';
+import { query, modificar } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { requireRol, requireVinculacion } from '../middlewares/auth.js';
 import { subirImagen, exigirImagen } from '../middlewares/upload.js';
@@ -79,13 +79,14 @@ router.put('/:id', requireRol('admin'), validar(idParam, 'params'), validar(esqu
   // editando no es un conflicto.
   await exigirEmailLibre(email, req.params.id);
   try {
-    await query(
+    await modificar(
       `UPDATE empleados SET
          nombre = COALESCE(?, nombre), email = COALESCE(?, email),
          hora_entrada = COALESCE(?, hora_entrada), tolerancia_min = COALESCE(?, tolerancia_min),
          activo = COALESCE(?, activo)
        WHERE id = ?`,
       [nombre ?? null, email ?? null, horaEntrada ?? null, toleranciaMin ?? null, activo === undefined ? null : (activo ? 1 : 0), req.params.id],
+      'Empleado no encontrado',
     );
   } catch (e) {
     throw traducirDuplicado(e);
@@ -95,7 +96,7 @@ router.put('/:id', requireRol('admin'), validar(idParam, 'params'), validar(esqu
 
 // DELETE /api/empleados/:id  (desactiva, conserva historial)
 router.delete('/:id', requireRol('admin'), validar(idParam, 'params'), async (req, res) => {
-  await query('UPDATE empleados SET activo = 0 WHERE id = ?', [req.params.id]);
+  await modificar('UPDATE empleados SET activo = 0 WHERE id = ?', [req.params.id], 'Empleado no encontrado');
   await query('UPDATE huellas SET activa = 0 WHERE empleado_id = ?', [req.params.id]);
   res.json({ ok: true });
 });

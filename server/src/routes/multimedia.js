@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query } from '../db.js';
+import { query, modificar } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { requireRol } from '../middlewares/auth.js';
 import { subirVideo } from '../middlewares/upload.js';
@@ -39,15 +39,15 @@ router.post('/', requireRol('admin'), subirVideo.single('video'), validar(esquem
 
 router.put('/:id', requireRol('admin'), validar(idParam, 'params'), validar(esquemaActualizarMultimedia), async (req, res) => {
   const { titulo, orden, activo } = req.body;
-  await query('UPDATE multimedia SET titulo = COALESCE(?, titulo), orden = COALESCE(?, orden), activo = COALESCE(?, activo) WHERE id = ?', [
+  await modificar('UPDATE multimedia SET titulo = COALESCE(?, titulo), orden = COALESCE(?, orden), activo = COALESCE(?, activo) WHERE id = ?', [
     titulo ?? null, orden ?? null, activo === undefined ? null : (activo ? 1 : 0), req.params.id,
-  ]);
+  ], 'Video no encontrado');
   await notificarTv();
   res.json({ ok: true });
 });
 
 router.delete('/:id', requireRol('admin'), validar(idParam, 'params'), async (req, res) => {
-  await query('UPDATE multimedia SET activo = 0 WHERE id = ?', [req.params.id]);
+  await modificar('UPDATE multimedia SET activo = 0 WHERE id = ?', [req.params.id], 'Video no encontrado');
   await notificarTv();
   res.json({ ok: true });
 });
