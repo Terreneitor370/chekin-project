@@ -40,9 +40,9 @@ src/
   navigation/AppNavigator.js
   screens/
     InicioScreen.js           decide: registrar o checar
-    VincularScreen.js         1/3 código de 6 dígitos (reemplaza LoginScreen con ID)
-    RegistroHuellaScreen.js   2/3 llave protegida por la huella -> BD
-    FotoRegistroScreen.js     3/3 foto de referencia para DeepFace
+    VincularScreen.js         vincular: código de 6 dígitos (reemplaza LoginScreen con ID)
+    RegistroHuellaScreen.js   paso 1 de 2: llave protegida por la huella -> BD
+    FotoRegistroScreen.js     paso 2 de 2: foto de referencia para DeepFace
     CheckinScreen.js          reto -> huella firma -> selfie -> envío
     ResultadoScreen.js        "Entrada a las 09:15"
     MiAsistenciaScreen.js     dashboard del empleado (hoy, días, retardos, últimos 7 días)
@@ -60,7 +60,8 @@ src/
 
 ## Pendientes (Isabel)
 
-- [ ] Confirmar compilación de react-native-biometrics en el Oppo Reno 14
-- [ ] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.)
+- [x] Confirmar compilación de react-native-biometrics en el Oppo Reno 14 (compiló y la huella funciona en Vincular/RegistroHuella)
+- [x] Mensajes específicos por código de error (DUPLICADO, ROSTRO_NO_COINCIDE, etc.) en `src/api/client.js`
+- [ ] Probar registro y check-in completos de punta a punta — **bloqueado**: el `face-service` de Jeshua no está arriba (`/health` da `faceService: false`), así que la foto de registro siempre da `SERVICIO_FACIAL_NO_DISPONIBLE`
 - [ ] Probar en 2 o 3 teléfonos
 - [ ] Probar "Mi asistencia" cuando Kassandra publique /api/mi/sesion y /api/mi/asistencia

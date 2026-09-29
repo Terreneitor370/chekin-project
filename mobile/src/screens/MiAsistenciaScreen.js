@@ -6,7 +6,7 @@ import { abrirSesionEmpleado, miAsistencia, pedirReto } from '../api/checador';
 import { mensajeDeError } from '../api/client';
 import { firmar } from '../services/biometria';
 import { leerSesion } from '../services/sesion';
-import { Boton, Pantalla, Texto, Titulo, colores } from '../components/ui';
+import { Boton, IconoEstado, Insignia, Pantalla, Tarjeta, Texto, Titulo, colores } from '../components/ui';
 
 const TZ = 'America/Hermosillo';
 const hora = (iso) => (iso ? new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: TZ }) : '--:--');
@@ -53,10 +53,11 @@ export default function MiAsistenciaScreen({ route }) {
   if (!token) {
     return (
       <Pantalla>
-        <Titulo>Mi asistencia</Titulo>
-        <Texto>Confirma tu huella para ver tus registros.</Texto>
-        {error && <Texto style={{ color: colores.error }}>{error}</Texto>}
-        <Boton titulo="Usar huella" onPress={entrarConHuella} cargando={cargando} />
+        <IconoEstado nombre="finger-print" tamano={150} />
+        <Titulo style={{ textAlign: 'center' }}>Mi asistencia</Titulo>
+        <Texto style={{ textAlign: 'center', color: colores.suave }}>Confirma tu huella para ver tus registros.</Texto>
+        {error && <Texto style={{ color: colores.error, textAlign: 'center' }}>{error}</Texto>}
+        <Boton titulo="Usar huella" icono="finger-print" onPress={entrarConHuella} cargando={cargando} />
       </Pantalla>
     );
   }
@@ -64,7 +65,7 @@ export default function MiAsistenciaScreen({ route }) {
   if (!datos) {
     return (
       <Pantalla>
-        <Texto>{cargando ? 'Cargando...' : error}</Texto>
+        <Texto style={{ textAlign: 'center' }}>{cargando ? 'Cargando...' : error}</Texto>
         {error && <Boton titulo="Reintentar" onPress={() => cargar(token)} />}
       </Pantalla>
     );
@@ -76,20 +77,20 @@ export default function MiAsistenciaScreen({ route }) {
       <Texto style={{ color: colores.suave }}>Horario de entrada {datos.empleado.horaEntrada} (tolerancia {datos.empleado.toleranciaMin} min)</Texto>
 
       <View style={estilos.tarjetas}>
-        <View style={estilos.tarjeta}>
+        <Tarjeta style={estilos.tarjeta}>
           <Texto style={estilos.etiqueta}>Hoy</Texto>
           <Texto style={[estilos.valor, datos.hoy?.tarde && { color: colores.error }]}>
             {hora(datos.hoy?.entrada)} - {hora(datos.hoy?.salida)}
           </Texto>
-        </View>
-        <View style={estilos.tarjeta}>
+        </Tarjeta>
+        <Tarjeta style={estilos.tarjeta}>
           <Texto style={estilos.etiqueta}>Días</Texto>
           <Texto style={estilos.valor}>{datos.totales.diasConAsistencia}</Texto>
-        </View>
-        <View style={estilos.tarjeta}>
+        </Tarjeta>
+        <Tarjeta style={estilos.tarjeta}>
           <Texto style={estilos.etiqueta}>Retardos</Texto>
           <Texto style={estilos.valor}>{datos.totales.tardanzas}</Texto>
-        </View>
+        </Tarjeta>
       </View>
 
       <FlatList
@@ -99,11 +100,11 @@ export default function MiAsistenciaScreen({ route }) {
         onRefresh={() => cargar(token)}
         ListEmptyComponent={<Texto>Sin registros en los últimos 7 días.</Texto>}
         renderItem={({ item }) => (
-          <View style={estilos.fila}>
-            <Texto>{fecha(item.registradoEn)}</Texto>
+          <Tarjeta style={estilos.fila}>
+            <Texto style={{ flex: 1, textTransform: 'capitalize' }}>{fecha(item.registradoEn)}</Texto>
             <Texto>{item.tipo === 'entrada' ? 'Entrada' : 'Salida'} {hora(item.registradoEn)}</Texto>
-            <Texto style={{ color: item.tarde ? colores.error : colores.exito }}>{item.tarde ? 'Retardo' : 'OK'}</Texto>
-          </View>
+            <Insignia texto={item.tarde ? 'Retardo' : 'A tiempo'} tono={item.tarde ? 'advertencia' : 'exito'} />
+          </Tarjeta>
         )}
       />
     </View>
@@ -113,8 +114,8 @@ export default function MiAsistenciaScreen({ route }) {
 const estilos = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: colores.fondo, padding: 20, gap: 12 },
   tarjetas: { flexDirection: 'row', gap: 10 },
-  tarjeta: { flex: 1, backgroundColor: colores.blanco, borderRadius: 12, padding: 12 },
+  tarjeta: { flex: 1, padding: 12, gap: 2 },
   etiqueta: { fontSize: 13, color: colores.suave },
   valor: { fontSize: 18, fontWeight: '700' },
-  fila: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colores.blanco, padding: 12, borderRadius: 10, marginBottom: 8 },
+  fila: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, marginBottom: 8 },
 });

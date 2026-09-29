@@ -1,22 +1,30 @@
 // Confirmación: "Check-in registrado a las 09:15" (PDF: ConfirmacionScreen)
-import { Boton, Pantalla, Texto, Titulo, colores } from '../components/ui';
+import { Boton, IconoEstado, Insignia, Pantalla, Tarjeta, Texto, Titulo, colores } from '../components/ui';
 
-function hora(fechaIso) {
-  return new Date(fechaIso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Hermosillo' });
-}
+const TZ = 'America/Hermosillo';
+const hora = (iso) => new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+const fecha = (iso) => new Date(iso).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ });
 
 export default function ResultadoScreen({ navigation, route }) {
   const { checkin, empleado, tokenEmpleado } = route.params.respuesta;
+  const esEntrada = checkin.tipo === 'entrada';
   return (
     <Pantalla>
-      <Titulo>Registro exitoso</Titulo>
-      <Texto>{empleado.nombre}</Texto>
-      <Texto style={{ fontSize: 22, fontWeight: '700', color: colores.exito }}>
-        {checkin.tipo === 'entrada' ? 'Entrada' : 'Salida'} a las {hora(checkin.registradoEn)}
-      </Texto>
-      {checkin.tarde && <Texto style={{ color: colores.error }}>Registrado con retardo.</Texto>}
+      <IconoEstado nombre="checkmark" tono="exito" />
+      <Titulo style={{ textAlign: 'center' }}>¡Asistencia registrada!</Titulo>
+
+      <Tarjeta>
+        <Texto style={{ fontSize: 20, fontWeight: '700' }}>{empleado.nombre}</Texto>
+        <Insignia texto={esEntrada ? 'ENTRADA' : 'SALIDA'} tono={checkin.tarde ? 'advertencia' : 'exito'} />
+        <Texto style={{ fontSize: 38, fontWeight: '700', color: checkin.tarde ? colores.advertencia : colores.exito }}>
+          {hora(checkin.registradoEn)}
+        </Texto>
+        <Texto style={{ color: colores.suave, textTransform: 'capitalize' }}>{fecha(checkin.registradoEn)}</Texto>
+        {checkin.tarde && <Texto style={{ color: colores.advertencia }}>Registrado con retardo.</Texto>}
+      </Tarjeta>
+
       {tokenEmpleado && (
-        <Boton titulo="Ver mi asistencia" variante="secundario" onPress={() => navigation.replace('MiAsistencia', { tokenEmpleado })} />
+        <Boton titulo="Ver mi asistencia" variante="secundario" icono="calendar-outline" onPress={() => navigation.replace('MiAsistencia', { tokenEmpleado })} />
       )}
       <Boton titulo="Listo" onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] })} />
     </Pantalla>

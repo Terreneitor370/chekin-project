@@ -22,7 +22,7 @@ export async function subirFotoRegistro(tokenVinculacion, fotoUri) {
   const form = new FormData();
   form.append('foto', { uri: fotoUri, name: 'registro.jpg', type: 'image/jpeg' });
   const { data } = await api.post('/empleados/foto-registro', form, {
-    headers: { Authorization: `Bearer ${tokenVinculacion}`, 'Content-Type': 'multipart/form-data' },
+    headers: { Authorization: `Bearer ${tokenVinculacion}` },
     timeout: 60000,
   });
   return data;
@@ -43,7 +43,6 @@ export async function enviarCheckin({ empleadoId, retoId, firma, idempotencyKey,
   form.append('idempotencyKey', idempotencyKey);
   form.append('selfie', { uri: selfieUri, name: 'selfie.jpg', type: 'image/jpeg' });
   const { data } = await api.post('/checkin', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 60000, // DeepFace en CPU puede tardar varios segundos
   });
   return data; // { checkin, empleado, verificacion }
