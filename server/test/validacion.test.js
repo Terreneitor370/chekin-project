@@ -8,6 +8,8 @@ import {
   crearAviso,
   crearEmpleado,
   actualizarEmpleado,
+  crearUsuario,
+  actualizarUsuario,
   crearMultimedia,
   checkinsQuery,
   idParam,
@@ -211,6 +213,55 @@ describe('correo duplicado', () => {
 
   it('un correo repetido no lo rechaza el esquema: eso lo decide la BD con el 409', () => {
     assert.equal(falla(crearEmpleado, { nombre: 'X', email: 'isabel@checador.local' }), null);
+  });
+});
+
+// Usuarios.jsx de Jorge llama a PUT /api/usuarios/:id con dos cuerpos distintos:
+//   editar   -> { rol, password? }
+//   desactivar -> { activo: false }
+// El segundo NO manda rol, asi que ningun campo puede ser obligatorio aqui.
+describe('usuarios del panel', () => {
+  it('crear exige correo, contraseña de 8+ y rol válido', () => {
+    assert.equal(falla(crearUsuario, { email: 'nuevo@checador.local', password: 'Clave123!', rol: 'supervisor' }), null);
+    assert.match(falla(crearUsuario, { email: 'nuevo@checador.local', password: 'corta7', rol: 'supervisor' }), /8 caracteres/);
+    assert.match(falla(crearUsuario, { email: 'no-correo', password: 'Clave123!' }), /correo/);
+  });
+
+  it('si no viene rol, por defecto es supervisor', () => {
+    const r = crearUsuario.safeParse({ email: 'nuevo@checador.local', password: 'Clave123!' });
+    assert.equal(r.data.rol, 'supervisor');
+  });
+
+  it('rechaza un rol que no sea admin o supervisor', () => {
+    assert.match(falla(crearUsuario, { email: 'x@y.com', password: 'Clave123!', rol: 'empleado' }), /rol/);
+  });
+
+  it('el boton desactivar: { activo: false } sin rol NO da 400', () => {
+    // Este es el caso que pidio Claudio: si rol fuera obligatorio, el panel tronaria.
+    const r = actualizarUsuario.safeParse({ activo: false });
+    assert.equal(r.success, true, `rechazo desactivar: ${r.error?.issues[0]?.message}`);
+    assert.equal(r.data.activo, false);
+    assert.equal('rol' in r.data, false, 'rol debe quedar ausente, no en null');
+  });
+
+  it('el formulario editar: { rol, password? } sin activo NO da 400', () => {
+    assert.equal(falla(actualizarUsuario, { rol: 'admin' }), null);
+    assert.equal(falla(actualizarUsuario, { rol: 'admin', password: 'NuevaClave1!' }), null);
+  });
+
+  it('acepta el cuerpo vacío sin quejarse (el panel puede mandar solo activo)', () => {
+    assert.equal(falla(actualizarUsuario, {}), null);
+  });
+
+  it('activo acepta 0/1 y true/false del formulario', () => {
+    for (const v of [0, 1, true, false, '0', '1', 'true', 'false']) {
+      assert.equal(falla(actualizarUsuario, { activo: v }), null, `rechazo activo=${v}`);
+    }
+  });
+
+  it('el PUT sigue rechazando un rol o contraseña invalidos si vienen', () => {
+    assert.match(falla(actualizarUsuario, { rol: 'empleado' }), /rol/);
+    assert.match(falla(actualizarUsuario, { password: 'corta' }), /8 caracteres/);
   });
 });
 

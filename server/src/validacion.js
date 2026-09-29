@@ -51,6 +51,29 @@ export const login = z.object({
   password: z.string({ error: 'falta la contraseña' }).min(1, 'la contraseña está vacía'),
 });
 
+// --- Usuarios del panel (solo admin) ----------------------------------------
+// El formulario de Jorge manda password con min 8 caracteres; el backend lo exige
+// igual aunque el panel lo validara, porque el panel no es la única entrada.
+const password = z.string({ error: 'falta la contraseña' }).min(8, 'la contraseña debe tener al menos 8 caracteres').max(72, 'máximo 72 caracteres');
+
+export const crearUsuario = z.object({
+  email: correo,
+  password,
+  rol: z.enum(['admin', 'supervisor'], 'el rol debe ser admin o supervisor').default('supervisor'),
+});
+
+// El PUT tiene DOS llamadas distintas con el mismo endpoint (Usuarios.jsx):
+//   editar  -> { rol, password? }
+//   baja    -> { activo: false }
+// Ninguna trae los dos, y el botón de baja no manda rol. Por eso TODO es opcional
+// y se resuelve con COALESCE: si el campo no viene, no se toca.
+export const actualizarUsuario = z.object({
+  email: correo.optional(),
+  password: password.optional(),
+  rol: z.enum(['admin', 'supervisor'], 'el rol debe ser admin o supervisor').optional(),
+  activo: booleano.optional(),
+});
+
 // --- 3. Registro del celular -------------------------------------------------
 export const vincular = z.object({
   codigo: z.string({ error: 'falta el código' }).trim().regex(/^\d{6}$/, 'el código debe tener 6 dígitos'),

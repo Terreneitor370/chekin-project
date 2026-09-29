@@ -52,7 +52,7 @@ uploads/                registro/ (privada), checkins/ (con token), multimedia/ 
 npm test
 ```
 
-71 pruebas de `validacion`, `firma`, `tiempo` y `base64-android`. No necesitan MySQL
+79 pruebas de `validacion`, `firma`, `tiempo` y `base64-android`. No necesitan MySQL
 ni face-service, y tampoco `server/.env`: `tiempo.test.js` corre en un clon limpio
 porque `utils/tiempo.js` ya no importa `config.js`. Son las que se ejecutan antes de
 cada PR.
@@ -71,10 +71,22 @@ npm run probar-firma -- "<llavePublica>" "<reto>" "<firma>"
 - [x] Pruebas de `validacion`, `firma`, `tiempo` y `base64-android` → `test/` (71)
 - [x] `email: ""` del panel → `null` (no 400 por un campo que quedó en blanco)
 - [x] `409 EMAIL_DUPLICADO` cuando el correo ya pertenece a otro empleado
-- [ ] `GET/POST/PUT /api/usuarios` (solo admin) — pendiente, va sobre el main ya integrado
+- [x] `GET/POST/PUT /api/usuarios` (solo admin) → `src/routes/usuarios.js`
 - [ ] `POST /api/mi/sesion` y `GET /api/mi/asistencia` (token de empleado, 8 h)
 - [ ] `tokenEmpleado` en la respuesta de `POST /api/checkin`
-- [ ] Correr `database/migraciones/001_roles.sql` (una sola vez) cuando llegue a main
+- [x] Migración `001_roles.sql` aplicada en el 3307 local (una sola vez)
+
+## Detalles de `/api/usuarios`
+
+- `POST` = `{ email, password, rol }`; `rol` por defecto `supervisor`. Contraseña de
+  8 caracteres o más, hasheada con bcrypt.
+- `PUT /:id` tiene **dos** cuerpos distintos porque el panel los manda así: el
+  formulario de editar envía `{ rol, password? }` y el botón de desactivar envía
+  `{ activo: false }` sin `rol`. Por eso **ningún campo es obligatorio** y todo se
+  resuelve con `COALESCE`; si el campo no viene, no se toca.
+- No se permite degradar ni desactivar al último administrador activo: si lo haces,
+  la organización se queda sin nadie que pueda administrar y el error es
+  400 `DATOS_INVALIDOS`.
 - [ ] Probar el flujo completo con el face-service real (requiere `/face-service` de Jeshua)
 - [ ] Revisar mensajes de error con Isabel (app) y Jorge (panel)
 
