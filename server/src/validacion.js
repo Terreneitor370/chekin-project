@@ -15,6 +15,19 @@ const id = z.coerce.number({ error: 'debe ser un número' }).int('debe ser un en
 const texto = (max, etiqueta) =>
   z.string({ error: `falta ${etiqueta}` }).trim().min(1, `${etiqueta} está vacío`).max(max, `máximo ${max} caracteres`);
 
+// Nombre de persona: letras (con acentos, ñ y diéresis), espacios, apóstrofos,
+// guiones y punto (para iniciales tipo "Jeshua E. Pérez"). Rechaza dígitos y
+// símbolos como ! # ^ @, que se cuelan por error de tecleo y luego ensucian la
+// búsqueda del panel. No se reutiliza texto() porque ese también valida el mensaje
+// de los avisos, que sí admite números ("Reunión a las 3 pm").
+const nombre = (max, etiqueta = 'el nombre') =>
+  texto(max, etiqueta)
+    .regex(/^\p{L}[\p{L} '-]*(?:\p{L}\.)?(?: [\p{L}'’-]+(?:\p{L}\.)?)*$/u,
+      'solo se permiten letras, espacios, apóstrofos, guiones y puntos iniciales (ejemplo: Jeshua E. Pérez)')
+    .refine((s) => !/\s{2,}/.test(s), 'no dejes dos espacios seguidos')
+    .refine((s) => !s.endsWith('.'), 'no termines el nombre con un punto')
+    .refine((s) => !s.endsWith('-'), 'no termines el nombre con un guion');
+
 // YYYY-MM-DD que además existe de verdad en el calendario: 2026-13-45 no pasa.
 const fecha = z
   .string({ error: 'falta la fecha' })
@@ -110,19 +123,27 @@ export const checkin = z.object({
 // 401 NO_AUTENTICADO según docs/api.md, no 400.
 export const idParam = z.object({ id });
 
+// La tolerancia son minutos de gracia para la entrada. 20 es el tope que pidió el
+// equipo: con 65535 (el límite de la columna) alguien podía poner 3 días de margen.
+const tolerancia = z.coerce.number({ error: 'debe ser un número' })
+  .int('debe ser un entero')
+  .min(0, 'no puede ser negativo')
+  .max(20, 'máximo 20 minutos')
+  .default(10);
+
 export const crearEmpleado = z.object({
-  nombre: texto(120, 'el nombre'),
+  nombre: nombre(120),
   email: correoOpcional,
   horaEntrada: hora.default('08:00'),
-  toleranciaMin: z.coerce.number({ error: 'debe ser un número' }).int('debe ser un entero').min(0, 'no puede ser negativo').max(65535, 'máximo 65535').default(10),
+  toleranciaMin: tolerancia,
 });
 
 // Los PUT usan COALESCE en SQL: un campo ausente no se toca.
 export const actualizarEmpleado = z.object({
-  nombre: texto(120, 'el nombre').optional(),
+  nombre: nombre(120).optional(),
   email: correoOpcional,
   horaEntrada: hora.optional(),
-  toleranciaMin: z.coerce.number({ error: 'debe ser un número' }).int('debe ser un entero').min(0, 'no puede ser negativo').max(65535, 'máximo 65535').optional(),
+  toleranciaMin: tolerancia.optional(),
   activo: booleano.optional(),
 });
 

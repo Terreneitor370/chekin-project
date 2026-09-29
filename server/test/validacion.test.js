@@ -159,6 +159,57 @@ describe('empleados', () => {
     assert.notEqual(falla(crearEmpleado, { nombre: 'X', toleranciaMin: 70000 }), null);
   });
 
+  it('acepta tolerancias de 0 a 20 y las recorta a numero', () => {
+    for (const t of [0, 5, 10, 20, '15']) {
+      assert.equal(falla(crearEmpleado, { nombre: 'X', toleranciaMin: t }), null, `debía aceptar ${t}`);
+    }
+    // el tope es 20: con la columna smallint se podían pedir 1440 min (un día entero)
+    assert.match(falla(crearEmpleado, { nombre: 'X', toleranciaMin: 21 }), /20 minutos/);
+  });
+
+  it('rechaza tolerancias no enteras o no numéricas', () => {
+    assert.notEqual(falla(crearEmpleado, { nombre: 'X', toleranciaMin: 10.5 }), null);
+    assert.notEqual(falla(crearEmpleado, { nombre: 'X', toleranciaMin: 'mucho' }), null);
+  });
+});
+
+// El nombre de una persona solo lleva letras (con acentos y ñ), espacios, apóstrofos,
+// guiones y puntos iniciales. Sin esto, "kas!!#^@kfn" entraba como nombre de empleado.
+describe('nombre de persona', () => {
+  it('acepta los nombres reales del equipo, con acentos e iniciales', () => {
+    for (const n of [
+      'Isabel Celis', 'Kassandra Cuadras', 'Jorge Ramírez', 'Jeshua E. Pérez',
+      'Empleado Demo', 'Kassie CA', 'María-José Sánchez', "O'Brien Ángel", 'Ñuño Núñez',
+      'Ana María de los Ángeles',
+    ]) {
+      assert.equal(falla(crearEmpleado, { nombre: n }), null, `debía aceptar "${n}"`);
+    }
+  });
+
+  it('rechaza símbolos, dígitos y HTML en el nombre', () => {
+    for (const n of [
+      'kas!!#^@kfn', 'kass@gmail.com', 'Pedro123', 'Ana<>María', '<script>alert(1)</script>',
+      'Ana María-', '--Ana', '!!!', 'user@admin', 'Juan/Pedro',
+    ]) {
+      assert.notEqual(falla(crearEmpleado, { nombre: n }), null, `debía rechazar "${n}"`);
+    }
+  });
+
+  it('rechaza puntos sueltos o al final del nombre', () => {
+    for (const n of ['Ana María.', 'Jeshua E. . Pérez', 'Jeshua E.. Pérez', '...']) {
+      assert.notEqual(falla(crearEmpleado, { nombre: n }), null, `debía rechazar "${n}"`);
+    }
+  });
+
+  it('rechaza dos espacios seguidos', () => {
+    assert.notEqual(falla(crearEmpleado, { nombre: 'Juan  Pérez' }), null);
+  });
+
+  it('aplica las mismas reglas al editar', () => {
+    assert.notEqual(falla(actualizarEmpleado, { nombre: 'kas!!#' }), null);
+    assert.equal(falla(actualizarEmpleado, { nombre: 'Jeshua E. Pérez' }), null);
+  });
+
   it('exige el nombre', () => {
     assert.match(falla(crearEmpleado, {}), /nombre/);
   });
