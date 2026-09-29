@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { MotiView } from 'moti';
 import { comprimir } from '../services/imagen';
 import { Boton, Pantalla, Tarjeta, Texto, colores } from './ui';
 
@@ -41,7 +42,14 @@ export default function CamaraFrontal({ titulo = 'Mira a la cámara', instruccio
         </View>
         <Texto style={estilos.instruccion}>{instruccion}</Texto>
       </Tarjeta>
-      <View style={estilos.ovalo} pointerEvents="none" />
+      {/* Pulso suave para invitar a acercar el rostro, no un simple aro estático. */}
+      <MotiView
+        style={estilos.ovalo}
+        pointerEvents="none"
+        from={{ opacity: 0.55, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 1100, loop: true, repeatReverse: true }}
+      />
       <View style={estilos.panel}>
         <Boton titulo={textoBoton} icono="camera-outline" onPress={tomar} cargando={tomando} />
       </View>
