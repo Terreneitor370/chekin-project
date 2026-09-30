@@ -2,23 +2,31 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Play, Fingerprint } from 'lucide-react';
 import { urlConToken } from '../config';
 
-export default function ModoMultimedia({ estado, visible }) {
+export default function ModoMultimedia({ estado, visible, conectado = true }) {
   const lista = [...(estado?.multimedia ?? [])].sort((a, b) => a.orden - b.orden);
   const [indice, setIndice] = useState(0);
   const [failed, setFailed] = useState([]);
   const player = useRef(null);
+  const retry = useRef(null);
   const signature = JSON.stringify(lista);
   useEffect(() => { setIndice(0); setFailed([]); }, [signature]);
+  useEffect(() => { if (conectado) setFailed([]); }, [conectado]);
+  useEffect(() => {
+    if (failed.length && visible && conectado) retry.current = setTimeout(() => setFailed([]), 30000);
+    return () => clearTimeout(retry.current);
+  }, [failed.length, visible, conectado]);
   const available = lista.filter(item => !failed.includes(item.id));
   const video = available[indice % available.length];
   useEffect(() => {
     if (!player.current) return;
+    let disposed = false;
     if (visible) player.current.play()?.catch(error => {
       // Pausing for a check-in may cancel an outstanding play request.
-      if (error.name !== 'AbortError') setFailed(ids => ids.includes(video.id) ? ids : [...ids, video.id]);
+      if (!disposed && error.name !== 'AbortError') setFailed(ids => ids.includes(video.id) ? ids : [...ids, video.id]);
     });
     else player.current.pause();
-  }, [visible, video?.id]);
+    return () => { disposed = true; };
+  }, [visible, video?.id, video?.url]);
   return <div className="media-panel" style={{ display: visible ? 'block' : 'none' }}>
     {video ? <video ref={player} key={video.id} src={urlConToken(video.url)} autoPlay muted playsInline loop={available.length === 1} preload="metadata" onEnded={() => setIndice(i => i + 1)} onError={() => setFailed(ids => ids.includes(video.id) ? ids : [...ids, video.id])} /> : <div className="institutional-art"><div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" /><div className="art-orbit orbit-three" /><Fingerprint className="art-fingerprint" /><div className="hero-copy"><span className="eyebrow">CONECTADOS EN CADA PASO</span><h1>Un gran día<br />empieza contigo<span>.</span></h1><p>Bienvenido a tu espacio de trabajo.</p><div className="hero-rule" /></div></div>}
     <div className="media-top"><span className="media-label"><span className="status-dot" /> NUESTRO ESPACIO</span><ArrowUpRight /></div>

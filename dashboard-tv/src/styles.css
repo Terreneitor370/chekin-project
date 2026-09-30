@@ -6,7 +6,8 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 html, body, #root { width: 100%; height: 100%; overflow: hidden; }
-.tv-shell { height: 100%; padding: 5vh 5vw; display: grid; grid-template-rows: 7.4vh minmax(0, 1fr) 8.5vh 3.8vh; gap: 2.5vh; font-size: 32px; background: radial-gradient(ellipse at 90% 0, #152326 0, transparent 40%); }
+#root { position: relative; }
+.tv-shell { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; padding: 54px 96px; display: grid; grid-template-rows: 80px minmax(0, 1fr) 92px 41px; gap: 27px; transform-origin: center; transform: translate(-50%, -50%) scale(var(--tv-scale, 1)); font-size: 32px; background: radial-gradient(ellipse at 90% 0, #152326 0, transparent 40%); }
 svg { width: 32px; height: 32px; flex-shrink: 0; stroke-width: 1.6; }
 .brand strong { font-size: 58px; letter-spacing: -3px; line-height: 1; }
 .brand strong span { color: var(--mint); }
@@ -107,4 +108,3 @@ footer svg { width: 28px; height: 28px; }
 @keyframes pulse { 50% { opacity: .25; } }
 @keyframes progress { to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .reconnect-dots i { animation: none; } .checkin-progress { animation: none; } }
-@media (max-width: 1500px) { .tv-shell { width: 1920px; height: 1080px; padding: 54px 96px; grid-template-rows: 80px minmax(0, 1fr) 92px 41px; gap: 27px; transform-origin: top left; transform: scale(var(--tv-scale, 1)); } }

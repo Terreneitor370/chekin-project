@@ -265,6 +265,7 @@ tr:nth-child(3n) .avatar { background: #f4eee7; border-color: #ede5d9; color: #b
 .login-support { text-align: center; padding-top: 24px; border-top: 1px solid #edf0ed; font-size: 11px; color: #9da89f; line-height: 1.8; }
 .login-side footer { position: absolute; bottom: 30px; font-size: 10px; color: #abb3ad; }
 .spin { animation: spin 1s linear infinite; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-height: 920px) { .sidebar-note { margin-top: auto; } }
 @media (max-height: 780px) { .sidebar-note { margin: 22px 0; } .sidebar { overflow-y: auto; } .user-block { margin-top: auto; } }

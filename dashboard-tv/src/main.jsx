@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
+if (import.meta.env.DEV) import('./DemoTv.css');
 
 // Keep the TV composition legible in smaller 16:9 preview windows.
 function fitPreview() {

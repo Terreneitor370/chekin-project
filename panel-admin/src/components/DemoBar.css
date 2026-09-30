@@ -1,0 +1,6 @@
+.demo-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 28px; border-bottom: 1px solid #cfddd1; background: #edf4e9; color: #355342; font-size: 12px; }
+.demo-banner strong, .demo-banner span { display: block; }
+.demo-banner strong { font-size: 11px; letter-spacing: .8px; margin-bottom: 3px; }
+.demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.demo-actions select { width: auto; padding: 6px 10px; }
+.demo-actions a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }

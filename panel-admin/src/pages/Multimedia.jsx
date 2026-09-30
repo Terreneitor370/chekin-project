@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Upload, MonitorPlay, Film, Play, Power, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useSesion } from '../api/sesion';
+import { DEMO_MODE } from '../api/demo';
 import { API_URL } from '../api/client';
 import { useCargar } from '../components/useCargar';
 import { active } from '../components/data';
@@ -27,7 +28,7 @@ function UploadForm({ nextOrder, onClose, saved }) {
 function VideoPreview({ video, onClose }) {
   const [error, setError] = useState('');
   let url;
-  try { const candidate = new URL(video.url, API_URL || window.location.origin); if (['http:', 'https:'].includes(candidate.protocol)) url = candidate.href; } catch { /* render fallback */ }
+  try { const candidate = new URL(video.url, API_URL || window.location.origin); if (['http:', 'https:'].includes(candidate.protocol) || (DEMO_MODE && candidate.protocol === 'blob:')) url = candidate.href; } catch { /* render fallback */ }
   return <Modal title={video.titulo} description="Vista previa del contenido" onClose={onClose}><video className="video-preview" controls autoPlay muted playsInline src={url} onError={() => setError('No se pudo reproducir este video. Comprueba su disponibilidad y formato.')} /><Alert>{error || (!url ? 'El servidor no devolvió una URL de video válida.' : '')}</Alert></Modal>;
 }
 export default function Multimedia() {

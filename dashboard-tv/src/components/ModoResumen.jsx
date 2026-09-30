@@ -1,11 +1,12 @@
 ﻿import { useEffect, useRef, useState } from 'react';
+import { summaryPages, SUMMARY_PAGE_MS } from '../summary';
 const hora = iso => new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Hermosillo' });
 export default function ModoResumen({ estado }) {
   const [page, setPage] = useState(0);
   const timer = useRef(null);
-  const pages = Math.max(1, Math.ceil(Math.max(estado?.llegaron.length ?? 0, estado?.faltan.length ?? 0) / 5));
+  const pages = summaryPages(estado);
   useEffect(() => {
-    timer.current = setInterval(() => setPage(p => (p + 1) % pages), 5000);
+    timer.current = setInterval(() => setPage(p => (p + 1) % pages), SUMMARY_PAGE_MS);
     return () => clearInterval(timer.current);
   }, [pages]);
   if (!estado) return null;
