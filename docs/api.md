@@ -5,7 +5,8 @@ Fuente de verdad entre `/mobile`, `/server`, `/dashboard-tv`, `/panel-admin` y `
 
 - Base URL: `https://<dominio>/api` (local: `http://localhost:3000/api`)
 - Formato: JSON en UTF-8, salvo los endpoints que suben imágenes (`multipart/form-data`).
-- Fechas: ISO 8601 en UTC (`2026-09-29T15:04:05.000Z`). "Hoy" y las tardanzas se calculan en `America/Hermosillo`.
+- Fechas: ISO 8601 en UTC (`2026-09-29T15:04:05.000Z`) para check-ins, retos, códigos y tokens. "Hoy" y las tardanzas se calculan en `America/Hermosillo`.
+- Los campos `fechaInicio`/`fechaFin` de los **avisos** y `desde`/`hasta` de **reportes y consultas** se envían SOLO como `AAAA-MM-DD` (sin hora); el servidor responde 400 si llega con hora (`usa el formato AAAA-MM-DD`).
 
 ## Roles
 
@@ -36,7 +37,7 @@ Si un admin o supervisor también checa, además necesita su registro en `emplea
 
 | HTTP | codigo | Cuándo |
 |---|---|---|
-| 400 | `DATOS_INVALIDOS` | Falta un campo o tiene formato incorrecto |
+| 400 | `DATOS_INVALIDOS` | Falta un campo, tiene formato incorrecto o el JSON está malformado |
 | 400 | `IMAGEN_INVALIDA` | Archivo que no es imagen o está corrupto |
 | 401 | `NO_AUTENTICADO` | Falta token o expiró |
 | 401 | `FIRMA_INVALIDA` | La firma no coincide con la llave registrada |
@@ -213,6 +214,10 @@ Se llama al cargar la página y cada vez que el socket se reconecta.
 Reglas de los `PUT`:
 - Solo se actualizan los campos enviados. Enviar `null` **no** borra un campo.
 - `activo` acepta `0`/`1` o `true`/`false`.
+
+Validación de empleados (POST `/api/empleados` y PUT `/api/empleados/:id`):
+- `nombre`: solo letras (con acentos, ñ y marcas combinadas), espacios simples, apóstrofos (`'`/`’`), guiones y puntos para iniciales (ej. `Jeshua E. Pérez`, `O'Brien`, `J. K. Rowling`, `O. Wilde`). Rechaza dígitos, símbolos, espacios dobles y terminar con punto o guion. Máximo 120 caracteres. Es la misma regla que valida en vivo el panel para no bloquear un nombre que el otro lado acepta.
+- `toleranciaMin`: entero de 0 a 20 minutos.
 
 ## 7. Eventos Socket.IO
 
