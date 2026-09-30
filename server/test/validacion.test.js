@@ -182,7 +182,8 @@ describe('nombre de persona', () => {
     for (const n of [
       'Isabel Celis', 'Kassandra Cuadras', 'Jorge Ramírez', 'Jeshua E. Pérez',
       'Empleado Demo', 'Kassie CA', 'María-José Sánchez', "O'Brien Ángel", 'Ñuño Núñez',
-      'Ana María de los Ángeles',
+      'Ana María de los Ángeles', 'O. Wilde', 'E. Pérez', 'J. K. Rowling', "O'Brien",
+      'Caleb O’Neal',
     ]) {
       assert.equal(falla(crearEmpleado, { nombre: n }), null, `debía aceptar "${n}"`);
     }

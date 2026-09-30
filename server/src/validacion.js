@@ -15,14 +15,15 @@ const id = z.coerce.number({ error: 'debe ser un número' }).int('debe ser un en
 const texto = (max, etiqueta) =>
   z.string({ error: `falta ${etiqueta}` }).trim().min(1, `${etiqueta} está vacío`).max(max, `máximo ${max} caracteres`);
 
-// Nombre de persona: letras (con acentos, ñ y diéresis), espacios, apóstrofos,
-// guiones y punto (para iniciales tipo "Jeshua E. Pérez"). Rechaza dígitos y
-// símbolos como ! # ^ @, que se cuelan por error de tecleo y luego ensucian la
-// búsqueda del panel. No se reutiliza texto() porque ese también valida el mensaje
-// de los avisos, que sí admite números ("Reunión a las 3 pm").
+// Nombre de persona: letras (con acentos, ñ, diéresis y marcas combinadas), espacios,
+// apóstrofos, guiones y puntos (para iniciales tipo "Jeshua E. Pérez" u "O. Wilde").
+// Misma regla que valida en vivo el panel (pattern de Jorge), para no bloquear un
+// nombre que el otro lado acepta. Rechaza dígitos y símbolos como ! # ^ @. No se
+// reutiliza texto() porque ese también valida el mensaje de los avisos, que sí
+// admite números ("Reunión a las 3 pm").
 const nombre = (max, etiqueta = 'el nombre') =>
   texto(max, etiqueta)
-    .regex(/^\p{L}[\p{L} '-]*(?:\p{L}\.)?(?: [\p{L}'’-]+(?:\p{L}\.)?)*$/u,
+    .regex(/^(?:\p{L}\p{M}*\. |\p{L}[\p{L}\p{M}]*[ '’\-])*\p{L}[\p{L}\p{M}]*$/u,
       'solo se permiten letras, espacios, apóstrofos, guiones y puntos iniciales (ejemplo: Jeshua E. Pérez)')
     .refine((s) => !/\s{2,}/.test(s), 'no dejes dos espacios seguidos')
     .refine((s) => !s.endsWith('.'), 'no termines el nombre con un punto')
