@@ -1,14 +1,18 @@
-// Máquina de estados de la TV: multimedia -> anuncio (cola, 4 s por persona) -> resumen (15 s) -> multimedia.
+// Máquina de estados de la TV: multimedia -> anuncio (cola, 4 s por persona) -> resumen (mínimo 15 s) -> multimedia.
 // Corrige el temporizador del PDF: window.timer global que mostraba solo al último que checaba.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TIEMPOS } from '../config';
+import { summaryPages, SUMMARY_PAGE_MS } from '../summary';
 
-export function useModoPantalla() {
+export function useModoPantalla(estadoRef) {
   const [modo, setModoEstado] = useState('multimedia'); // multimedia | anuncio | resumen
   const [actual, setActual] = useState(null);
   const modoRef = useRef('multimedia');
   const cola = useRef([]);
   const timer = useRef(null);
+  const source = useRef(estadoRef);
+  source.current = estadoRef;
+  const [resumenEstado, setResumenEstado] = useState(null);
 
   const setModo = (m) => {
     modoRef.current = m;
@@ -29,8 +33,10 @@ export function useModoPantalla() {
       timer.current = setTimeout(siguiente, TIEMPOS.anuncioMs);
     } else {
       setActual(null);
+      const snapshot = source.current?.current;
+      setResumenEstado(snapshot);
       setModo('resumen');
-      timer.current = setTimeout(() => setModo('multimedia'), TIEMPOS.resumenMs);
+      timer.current = setTimeout(() => setModo('multimedia'), Math.max(TIEMPOS.resumenMs, summaryPages(snapshot) * SUMMARY_PAGE_MS));
     }
   }, []);
 
@@ -42,5 +48,7 @@ export function useModoPantalla() {
 
   useEffect(() => limpiar, []);
 
-  return { modo, actual, encolar };
+  const reiniciar = useCallback(() => { limpiar(); cola.current = []; setActual(null); setModo('multimedia'); }, []);
+  const mostrarResumen = useCallback(() => { cola.current = []; siguiente(); }, [siguiente]);
+  return { modo, actual, encolar, resumenEstado, reiniciar, mostrarResumen };
 }

@@ -1,0 +1,10 @@
+.demo-controls { position: fixed; bottom: 6px; left: 12px; right: 12px; z-index: 20; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 6px 12px; background: #101c21f5; border: 1px solid #38544f; border-radius: 12px; font-size: 13px; }
+.demo-controls strong { color: var(--mint); }
+.demo-controls > span { color: var(--muted); }
+.demo-controls button, .demo-controls a, .demo-file { padding: 4px 9px; border: 1px solid #3c5554; border-radius: 6px; background: #1b3030; cursor: pointer; }
+.demo-controls button:hover, .demo-controls a:hover, .demo-file:hover { background: #2b4843; }
+.demo-controls :focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+.demo-file { position: relative; overflow: hidden; }
+.demo-file input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.demo-file:focus-within { outline: 2px solid var(--mint); }
+.demo-loading { padding: 5%; font-size: 32px; }

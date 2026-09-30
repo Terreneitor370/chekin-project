@@ -91,3 +91,80 @@ test('missing TV token and broken media have designed fallback states', async ({
   io.emit('nuevo-checkin', { ...event(1), fotoUrl: '/uploads/missing.jpg' });
   await expect(page.locator('.portrait-fallback')).toBeVisible();
 });
+
+test('summary displays every employee beyond the first fifteen', async ({ page }) => {
+  snapshot.llegaron = Array.from({ length: 18 }, (_, i) => ({ empleadoId: i + 1, nombre: `Persona ${i + 1}`, hora: event(i).hora, tarde: false }));
+  await open(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  io.emit('nuevo-checkin', event(1));
+  await expect(page.locator('.checkin-copy h1')).toHaveText('Persona 1');
+  await page.clock.fastForward(4000);
+  await expect(page.locator('.summary-page')).toContainText('Página 1 de 4');
+  for (let p = 2; p <= 4; p++) {
+    await page.clock.fastForward(5000);
+    await expect(page.locator('.summary-page')).toContainText(`Página ${p} de 4`);
+  }
+  await expect(page.locator('.fila').filter({ hasText: 'Persona 18' })).toBeVisible();
+  await page.clock.fastForward(4999);
+  await expect(page.locator('.resumen')).toBeVisible();
+  await page.clock.fastForward(1);
+  await expect(page.locator('.resumen')).toHaveCount(0);
+});
+
+test('failed media retries without a new multimedia event', async ({ page }) => {
+  let attempts = 0;
+  snapshot.multimedia = [{ id: 1, titulo: 'Video recuperable', orden: 1, url: '/uploads/retry.mp4' }];
+  await page.route('**/uploads/retry.mp4*', route => { attempts++; return route.fulfill({ status: 503, body: '' }); });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await open(page);
+  await expect(page.getByText('Contenido no disponible')).toBeVisible();
+  const before = attempts;
+  await page.clock.fastForward(30001);
+  await expect.poll(() => attempts).toBeGreaterThan(before);
+});
+
+test('TV composition fits intermediate desktop and 720p viewports', async ({ page }) => {
+  await open(page);
+  for (const size of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(size);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const layout = await page.evaluate(() => {
+      const stage = document.querySelector('.main-stage').getBoundingClientRect();
+      const sidebar = document.querySelector('.sidebar').getBoundingClientRect();
+      return { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, left: stage.left, bottom: sidebar.bottom, childrenFit: [...document.querySelector('.sidebar').children].every(el => el.getBoundingClientRect().bottom <= sidebar.bottom + 1) };
+    });
+    expect(layout.width).toBe(size.width);
+    expect(layout.height).toBe(size.height);
+    expect(layout.left).toBeGreaterThanOrEqual(size.width * 0.05 - 1);
+    expect(layout.bottom).toBeLessThan(size.height);
+    expect(layout.childrenFit).toBe(true);
+  }
+  await page.screenshot({ path: 'test-results/tv-720p.png' });
+});
+
+test('TV demo previews states and FIFO locally without HTTP API or sockets', async ({ page }) => {
+  const network = [];
+  page.on('websocket', socket => { if (socket.url().includes('socket.io')) network.push(socket.url()); });
+  await page.route('**/api/**', route => { network.push(route.request().url()); return route.abort(); });
+  await page.goto('/tv/?demo=1');
+  await expect(page.getByText('Vista demo', { exact: true })).toBeVisible();
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await page.getByRole('button', { name: 'Ráfaga de 3', exact: true }).click();
+  for (const name of ['Lucía Morales', 'Mateo Navarro', 'María-José Sánchez']) {
+    await expect(page.locator('.checkin-copy h1')).toHaveText(name);
+    await page.clock.fastForward(4000);
+  }
+  await expect(page.locator('.resumen')).toBeVisible();
+  await page.getByRole('button', { name: 'Multimedia', exact: true }).click();
+  await expect(page.locator('.institutional-art')).toBeVisible();
+  await page.getByRole('button', { name: 'Reconexión', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Reconectando...' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restablecer', exact: true }).click();
+  await page.getByRole('button', { name: 'Resumen', exact: true }).click();
+  await expect(page.locator('.summary-page')).toContainText('Página 1 de 4');
+  await page.screenshot({ path: 'test-results/demo-tv.png' });
+  expect(network).toEqual([]);
+});
