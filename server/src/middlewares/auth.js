@@ -43,6 +43,23 @@ export function requireVinculacion(req, _res, next) {
   }
 }
 
+// App móvil, rol "empleado": token de 8 h con { empleadoId }.
+// A diferencia de los otros, este NO usa NIVEL: solo vale para /api/mi/... y no
+// puede tocar nada del panel. El id sale del token, nunca de la URL, para que un
+// empleado no lea el registro de otro cambiando el número de la ruta.
+export function requireEmpleado(req, _res, next) {
+  const token = leerBearer(req);
+  if (!token) return next(errores.noAutenticado());
+  try {
+    const datos = jwt.verify(token, config.jwtSecret);
+    if (datos.tipo !== 'empleado') return next(errores.noAutenticado());
+    req.empleadoId = datos.empleadoId;
+    next();
+  } catch {
+    next(errores.noAutenticado('Tu sesión expiró, firma de nuevo con la huella'));
+  }
+}
+
 // Pantalla Roku: ?token= en la URL. Se compara contra el SHA-256 guardado.
 export async function validarTokenTv(token) {
   if (!token) return null;

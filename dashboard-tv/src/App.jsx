@@ -1,22 +1,17 @@
+import { lazy, Suspense, useRef } from 'react';
 import { useEstadoTv } from './hooks/useEstadoTv';
 import { useModoPantalla } from './hooks/useModoPantalla';
-import ModoMultimedia from './components/ModoMultimedia';
-import ModoAnuncio from './components/ModoAnuncio';
-import ModoResumen from './components/ModoResumen';
+import { DEMO_MODE } from './config';
+import TvScreen from './TvScreen';
 
+const DemoTv = import.meta.env.DEV ? lazy(() => import('./DemoTv')) : null;
+function LiveTv() {
+  const estadoRef = useRef(null);
+  const mode = useModoPantalla(estadoRef);
+  const live = useEstadoTv({ onCheckin: mode.encolar });
+  estadoRef.current = live.estado;
+  return <TvScreen {...live} {...mode} />;
+}
 export default function App() {
-  const { modo, actual, encolar } = useModoPantalla();
-  const { estado, conectado, error } = useEstadoTv({ onCheckin: encolar });
-
-  if (error && !estado) return <div className="mensaje-central">{error}</div>;
-  if (!estado) return <div className="mensaje-central">Cargando...</div>;
-
-  return (
-    <>
-      <ModoMultimedia estado={estado} visible={modo === 'multimedia'} />
-      {modo === 'anuncio' && <ModoAnuncio checkin={actual} />}
-      {modo === 'resumen' && <ModoResumen estado={estado} />}
-      {!conectado && <div className="banner-conexion">Reconectando...</div>}
-    </>
-  );
+  return DEMO_MODE && DemoTv ? <Suspense fallback={<div className="demo-loading">Cargando demo…</div>}><DemoTv /></Suspense> : <LiveTv />;
 }

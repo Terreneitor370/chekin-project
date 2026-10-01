@@ -16,6 +16,8 @@ import tvRoutes from './routes/tv.js';
 import avisosRoutes from './routes/avisos.js';
 import multimediaRoutes from './routes/multimedia.js';
 import reportesRoutes, { checkinsRouter } from './routes/reportes.js';
+import usuariosRoutes from './routes/usuarios.js';
+import miRoutes from './routes/mi.js';
 
 export function crearApp() {
   const app = express();
@@ -47,6 +49,8 @@ export function crearApp() {
   app.use('/api/avisos', avisosRoutes);
   app.use('/api/multimedia', multimediaRoutes);
   app.use('/api/reportes', reportesRoutes);
+  app.use('/api/usuarios', usuariosRoutes);
+  app.use('/api/mi', miRoutes);
 
   // Archivos: multimedia es pública (la TV la reproduce); selfies requieren token; registro nunca se sirve.
   app.use('/uploads/multimedia', express.static(`${config.uploadsDir}/multimedia`));

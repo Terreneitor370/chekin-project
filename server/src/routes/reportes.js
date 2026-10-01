@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { query } from '../db.js';
-import { errores } from '../utils/errores.js';
 import { requireRol } from '../middlewares/auth.js';
+import { validar } from '../middlewares/validar.js';
 import { fechaNegocio, rangoDelDia } from '../utils/tiempo.js';
+import { checkinsQuery, reporteAsistencia } from '../validacion.js';
 
 const router = Router();
 router.use(requireRol('supervisor'));
@@ -23,17 +24,14 @@ async function checkinsEntre(desde, hasta) {
 // GET /api/checkins?fecha=YYYY-MM-DD
 export const checkinsRouter = Router();
 checkinsRouter.use(requireRol('supervisor'));
-checkinsRouter.get('/', async (req, res) => {
+checkinsRouter.get('/', validar(checkinsQuery, 'query'), async (req, res) => {
   const fecha = req.query.fecha ?? fechaNegocio();
   res.json(await checkinsEntre(fecha, fecha));
 });
 
 // GET /api/reportes/asistencia?desde=...&hasta=...&formato=json|csv
-router.get('/asistencia', async (req, res) => {
-  const { desde, hasta, formato = 'json' } = req.query;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(desde ?? '') || !/^\d{4}-\d{2}-\d{2}$/.test(hasta ?? '')) {
-    throw errores.datosInvalidos('Usa desde y hasta con formato YYYY-MM-DD');
-  }
+router.get('/asistencia', validar(reporteAsistencia, 'query'), async (req, res) => {
+  const { desde, hasta, formato } = req.query;
   const filas = await checkinsEntre(desde, hasta);
   if (formato !== 'csv') return res.json(filas);
   const encabezado = 'id,nombre,tipo,tarde,registrado_en,verificado,distancia';

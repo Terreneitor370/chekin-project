@@ -2,14 +2,15 @@ import { Router } from 'express';
 import { query } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { requireVinculacion } from '../middlewares/auth.js';
+import { validar } from '../middlewares/validar.js';
 import { limpiarBase64, validarLlavePublica } from '../services/firma.js';
+import { registrarBiometria as esquemaBiometria } from '../validacion.js';
 
 const router = Router();
 
 // POST /api/biometria/registrar  { llavePublica, dispositivo }  (la huella como dato ligado al usuario)
-router.post('/registrar', requireVinculacion, async (req, res) => {
-  const { llavePublica, dispositivo } = req.body ?? {};
-  if (!llavePublica) throw errores.datosInvalidos('Falta llavePublica');
+router.post('/registrar', requireVinculacion, validar(esquemaBiometria), async (req, res) => {
+  const { llavePublica, dispositivo } = req.body;
   try {
     validarLlavePublica(llavePublica);
   } catch {

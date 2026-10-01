@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { query } from '../db.js';
 import { errores } from '../utils/errores.js';
 import { firmarJwt } from '../middlewares/auth.js';
+import { validar } from '../middlewares/validar.js';
+import { vincular as esquemaVincular } from '../validacion.js';
 
 const router = Router();
 
 // POST /api/dispositivos/vincular  { codigo }
-router.post('/vincular', async (req, res) => {
-  const codigo = String(req.body?.codigo ?? '').trim();
-  if (!/^\d{6}$/.test(codigo)) throw errores.datosInvalidos('El código debe tener 6 dígitos');
+router.post('/vincular', validar(esquemaVincular), async (req, res) => {
+  const { codigo } = req.body;
   const [fila] = await query(
     `SELECT c.id, c.empleado_id, e.nombre
      FROM codigos_vinculacion c JOIN empleados e ON e.id = c.empleado_id

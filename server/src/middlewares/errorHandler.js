@@ -12,6 +12,9 @@ export function errorHandler(err, _req, res, _next) {
   if (err?.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ error: { codigo: 'DATOS_INVALIDOS', mensaje: 'El archivo es demasiado grande' } });
   }
+  if (err?.status === 400 || err?.statusCode === 400) {
+    return res.status(400).json({ error: { codigo: 'DATOS_INVALIDOS', mensaje: 'El cuerpo de la solicitud no es válido' } });
+  }
   console.error(err);
   res.status(500).json({ error: { codigo: 'ERROR_INTERNO', mensaje: 'Ocurrió un error inesperado' } });
 }

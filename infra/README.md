@@ -9,8 +9,10 @@ Configuración del VPS Ubuntu (PDF: Nginx + PM2 + Certbot + ufw + backups).
 | `nginx/checador.conf` | Proxy de `/api`, `/socket.io`, `/uploads`; sirve `/tv` y `/admin` |
 | `ecosystem.config.cjs` | PM2 para `checador-api` (Node) y `checador-face` (DeepFace) |
 | `scripts/desplegar.sh` | `git pull` + builds + recarga de PM2 |
+| `scripts/configurar-https.sh` | Publica Nginx con dominio real y emite certificado Let's Encrypt |
 | `scripts/backup-mysql.sh` | Backup diario (MySQL + fotos de registro), guarda 7 días |
-| `scripts/restaurar-mysql.sh` | Restaurar un backup |
+| `scripts/restaurar-mysql.sh` | Restaurar backup SQL y (opcionalmente) fotos de registro |
+| `scripts/probar-backup-restore.sh` | Prueba end-to-end: genera backup y valida restauración en BD temporal |
 
 ## Instalación inicial del VPS (una vez)
 
@@ -40,10 +42,7 @@ cp server/.env.example server/.env   # llenar valores reales
 # 6. Frontends + Nginx + HTTPS
 sudo mkdir -p /var/www/checador/tv /var/www/checador/admin
 ./infra/scripts/desplegar.sh
-sudo cp infra/nginx/checador.conf /etc/nginx/sites-available/checador
-sudo ln -s /etc/nginx/sites-available/checador /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d checador.ejemplo.com
+sudo bash ./infra/scripts/configurar-https.sh checador.tudominio.com tu-correo@dominio.com
 
 # 7. PM2 al arranque y backups
 pm2 save && pm2 startup
@@ -58,6 +57,40 @@ pm2 save && pm2 startup
 ## URL que se abre en el Roku
 
 `https://<dominio>/tv/?token=<TV_TOKEN>` (el token de prueba es `tv-demo-token-cambiar`; cambiarlo en producción).
+
+## Validaciones de pre-demo (Jeshua)
+
+### 1) HTTPS en VPS
+
+```bash
+cd /opt/checador
+sudo bash ./infra/scripts/configurar-https.sh checador.tudominio.com tu-correo@dominio.com
+curl -I https://checador.tudominio.com/health
+```
+
+Esperado: `HTTP/2 200` y certificado válido.
+
+### 2) Backup + restore probado (no solo cron)
+
+```bash
+cd /opt/checador
+bash ./infra/scripts/probar-backup-restore.sh
+```
+
+La prueba:
+- ejecuta `backup-mysql.sh`,
+- restaura el SQL en una BD temporal (`checador_restore_test`),
+- valida que el número de tablas restauradas coincida con producción,
+- y valida el `.tar.gz` de fotos de registro si existe para ese timestamp.
+
+Nota: el usuario MySQL configurado en `~/.my.cnf` debe tener permisos para `CREATE/DROP DATABASE`
+de la base temporal usada en la prueba.
+
+Para restauración manual completa (BD + fotos), usar:
+
+```bash
+bash ./infra/scripts/restaurar-mysql.sh /var/backups/checador/checador_YYYY-MM-DD_HHMM.sql.gz /var/backups/checador/uploads_registro_YYYY-MM-DD_HHMM.tar.gz
+```
 
 ## Pendientes (Jeshua)
 
