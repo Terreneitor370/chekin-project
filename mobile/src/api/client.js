@@ -16,6 +16,8 @@ const MENSAJES_POR_CODIGO = {
   ROSTRO_NO_REAL: 'Detectamos una foto o una pantalla. Colócate frente a la cámara en persona.',
   NO_ENCONTRADO: 'No encontramos tu registro. Confirma tu código con Recursos Humanos.',
   DUPLICADO: 'Ya registraste tu asistencia hace unos minutos. Espera 5 minutos para volver a checar.',
+  YA_REGISTRADO: 'Ya marcaste esto hoy. Solo se permite una vez al día.',
+  SIN_ENTRADA: 'Primero marca tu entrada antes de marcar la salida.',
   SIN_ROSTRO: 'No vimos un rostro claro en la foto. Debe salir una sola persona, de frente y con buena luz.',
   DEMASIADAS_SOLICITUDES: 'Demasiados intentos seguidos. Espera un momento y vuelve a intentar.',
   SERVICIO_FACIAL_NO_DISPONIBLE: 'La verificación facial no está disponible ahora. Intenta de nuevo en unos minutos.',

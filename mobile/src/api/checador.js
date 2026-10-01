@@ -34,11 +34,12 @@ export async function pedirReto(empleadoId) {
   return data; // { retoId, reto, expiraEn }
 }
 
-// POST /api/checkin  (multipart: empleadoId, retoId, firma, idempotencyKey, selfie)
-export async function enviarCheckin({ empleadoId, retoId, firma, idempotencyKey, selfieUri }) {
+// POST /api/checkin  (multipart: empleadoId, retoId, tipo, firma, idempotencyKey, selfie)
+export async function enviarCheckin({ empleadoId, retoId, tipo, firma, idempotencyKey, selfieUri }) {
   const form = new FormData();
   form.append('empleadoId', String(empleadoId));
   form.append('retoId', String(retoId));
+  form.append('tipo', tipo);
   form.append('firma', firma);
   form.append('idempotencyKey', idempotencyKey);
   form.append('selfie', { uri: selfieUri, name: 'selfie.jpg', type: 'image/jpeg' });

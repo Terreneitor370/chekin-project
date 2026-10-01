@@ -18,7 +18,9 @@ const CONSEJOS = [
   ['scan-outline', 'Mira directo a la cámara, a la altura de tus ojos.'],
 ];
 
-export default function CheckinScreen({ navigation }) {
+export default function CheckinScreen({ navigation, route }) {
+  const tipo = route.params?.tipo === 'salida' ? 'salida' : 'entrada';
+  const esSalida = tipo === 'salida';
   const [paso, setPaso] = useState('inicio'); // inicio | camara | enviando | error | sinRespuesta
   const [error, setError] = useState(null);
   const [codigo, setCodigo] = useState(null);
@@ -32,7 +34,7 @@ export default function CheckinScreen({ navigation }) {
       const { retoId, reto } = await pedirReto(sesion.empleadoId);
       const firma = await firmar(reto);
       // Un idempotencyKey por intento: si la red reintenta, el servidor no duplica el registro
-      datos.current = { empleadoId: sesion.empleadoId, retoId, firma, idempotencyKey: Crypto.randomUUID() };
+      datos.current = { empleadoId: sesion.empleadoId, retoId, tipo, firma, idempotencyKey: Crypto.randomUUID() };
       setPaso('camara');
     } catch (e) {
       setError(mensajeDeError(e));
@@ -62,7 +64,7 @@ export default function CheckinScreen({ navigation }) {
       <CamaraFrontal
         titulo="Ahora tu selfie"
         instruccion="Mira de frente a la cámara y mantén una expresión neutra."
-        textoBoton="Checar"
+        textoBoton={esSalida ? 'Checar salida' : 'Checar entrada'}
         onFoto={enviar}
       />
     );
@@ -83,8 +85,8 @@ export default function CheckinScreen({ navigation }) {
   if (paso === 'inicio') {
     return (
       <Pantalla>
-        <IconoEstado nombre="finger-print" tamano={180} />
-        <Titulo style={{ textAlign: 'center' }}>Registrar asistencia</Titulo>
+        <IconoEstado nombre={esSalida ? 'log-out-outline' : 'log-in-outline'} tamano={180} />
+        <Titulo style={{ textAlign: 'center' }}>{esSalida ? 'Marcar salida' : 'Marcar entrada'}</Titulo>
         <Texto style={{ textAlign: 'center', color: colores.suave }}>
           Confirma con tu huella y después tómate una selfie.
         </Texto>

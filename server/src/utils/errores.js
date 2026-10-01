@@ -18,6 +18,8 @@ export const errores = {
   rostroNoReal: () => new AppError(403, 'ROSTRO_NO_REAL', 'La imagen no parece de una persona real'),
   noEncontrado: (m = 'No encontrado') => new AppError(404, 'NO_ENCONTRADO', m),
   duplicado: (hora) => new AppError(409, 'DUPLICADO', `Ya registraste asistencia a las ${hora}`),
+  yaRegistrado: (tipo) => new AppError(409, 'YA_REGISTRADO', tipo === 'entrada' ? 'Ya registraste tu entrada hoy' : 'Ya registraste tu salida hoy'),
+  sinEntrada: () => new AppError(409, 'SIN_ENTRADA', 'Registra tu entrada antes de marcar tu salida'),
   emailDuplicado: () => new AppError(409, 'EMAIL_DUPLICADO', 'Ese correo ya está registrado en otro empleado'),
   correoDuplicado: () => new AppError(409, 'EMAIL_DUPLICADO', 'Ese correo ya está registrado con otro usuario'),
   sinRostro: () => new AppError(422, 'SIN_ROSTRO', 'La foto debe tener exactamente un rostro claro'),

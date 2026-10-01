@@ -27,7 +27,7 @@ router.get('/reto', validar(retoQuery, 'query'), async (req, res) => {
 
 // POST /api/checkin  (multipart: empleadoId, retoId, firma, idempotencyKey, selfie)
 router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), validar(esquemaCheckin), async (req, res) => {
-  const { empleadoId, retoId, firma, idempotencyKey } = req.body;
+  const { empleadoId, retoId, tipo, firma, idempotencyKey } = req.body;
 
   // 0. Reintento de red: si ya existe ese idempotencyKey, devolver el mismo resultado
   const [previo] = await query(
@@ -61,7 +61,7 @@ router.post('/', subirImagen.single('selfie'), exigirImagen('selfie'), validar(e
 
   // 4. Reglas de asistencia (duplicado, entrada/salida, tardanza) y guardado
   const ahora = new Date();
-  const { tipo, tarde } = await clasificarRegistro(empleado, ahora);
+  const { tarde } = await clasificarRegistro(empleado, tipo, ahora);
   const fotoPath = await guardarArchivo('checkins', req.file.buffer);
   const [ins] = await pool.execute(
     `INSERT INTO checkins

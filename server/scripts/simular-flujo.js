@@ -47,6 +47,7 @@ const firma = crypto.sign('RSA-SHA256', Buffer.from(reto), privateKey).toString(
 const fc = new FormData();
 fc.append('empleadoId', String(EMPLEADO_ID));
 fc.append('retoId', String(retoId));
+fc.append('tipo', process.env.TIPO ?? 'entrada');
 fc.append('firma', firma);
 fc.append('idempotencyKey', crypto.randomUUID());
 fc.append('selfie', await foto(process.env.SELFIE), 'selfie.jpg');

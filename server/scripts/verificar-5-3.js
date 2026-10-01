@@ -67,6 +67,7 @@ async function intentarCheckin(retoId, valor, firma, key) {
   const fc = new FormData();
   fc.append('empleadoId', String(E));
   fc.append('retoId', String(retoId));
+  fc.append('tipo', 'entrada');
   fc.append('firma', firma);
   fc.append('idempotencyKey', key ?? crypto.randomUUID());
   fc.append('selfie', new Blob([jpeg()], { type: 'image/jpeg' }), 's.jpg');
@@ -109,38 +110,49 @@ const borrar = () => query('DELETE FROM checkins WHERE empleado_id = ?', [E]);
 
 const [emp] = await query('SELECT id, hora_entrada, tolerancia_min FROM empleados WHERE id = ?', [E]);
 await borrar();
-check('sin registros previos, el primero del dia es "entrada"', (await clasificarRegistro(emp)).tipo === 'entrada');
+check('sin registros previos, se puede marcar "entrada"', (await clasificarRegistro(emp, 'entrada')).tipo === 'entrada');
 
-// una entrada a las 07:50 locales, y el segundo intento a las 10:00 -> debe ser salida
+// sin entrada todavia, intentar salida -> 409 SIN_ENTRADA
+await borrar();
+try { await clasificarRegistro(emp, 'salida', diaLocal('10:00')); check('salida sin entrada -> 409 SIN_ENTRADA', false, 'no lanzo error'); }
+catch (e) { check('salida sin entrada -> 409 SIN_ENTRADA', e.codigo === 'SIN_ENTRADA' && e.status === 409, `-> ${e.status} ${e.codigo}`); }
+
+// una entrada a las 07:50 locales, y a las 10:00 pide salida -> debe aceptarla
 await borrar();
 await insertar(diaLocal('07:50').toISOString());
-const c1 = await clasificarRegistro(emp, diaLocal('10:00'));
-check('el segundo registro del dia es "salida"', c1.tipo === 'salida', `tipo=${c1.tipo}`);
+const c1 = await clasificarRegistro(emp, 'salida', diaLocal('10:00'));
+check('con entrada ya marcada, salida se acepta', c1.tipo === 'salida', `tipo=${c1.tipo}`);
 
-// 2 min despues del anterior -> duplicado
+// ya se marco entrada hoy -> pedir entrada otra vez -> 409 YA_REGISTRADO
+await borrar();
+await insertar(diaLocal('07:50').toISOString());
+try { await clasificarRegistro(emp, 'entrada', diaLocal('10:00')); check('entrada repetida el mismo dia -> 409 YA_REGISTRADO', false, 'no lanzo error'); }
+catch (e) { check('entrada repetida el mismo dia -> 409 YA_REGISTRADO', e.codigo === 'YA_REGISTRADO' && e.status === 409, `-> ${e.status} ${e.codigo}`); }
+
+// 2 min despues del anterior -> duplicado (independiente del tipo)
 await borrar();
 await insertar(diaLocal('09:58').toISOString());
-try { await clasificarRegistro(emp, diaLocal('10:00')); check('dentro de 5 min -> 409 DUPLICADO', false, 'no lanzo error'); }
+try { await clasificarRegistro(emp, 'salida', diaLocal('10:00')); check('dentro de 5 min -> 409 DUPLICADO', false, 'no lanzo error'); }
 catch (e) { check('dentro de 5 min -> 409 DUPLICADO', e.codigo === 'DUPLICADO' && e.status === 409, `-> ${e.status} ${e.codigo}`); }
 
 // 6 min despues -> ya no es duplicado
 await borrar();
 await insertar(diaLocal('09:54').toISOString());
-try { await clasificarRegistro(emp, diaLocal('10:00')); check('pasados 6 min -> ya no es duplicado', true); }
+try { await clasificarRegistro(emp, 'salida', diaLocal('10:00')); check('pasados 6 min -> ya no es duplicado', true); }
 catch (e) { check('pasados 6 min -> ya no es duplicado', false, `-> ${e.codigo}`); }
 
 // tardanza: el empleado 5 tiene hora_entrada 09:00 y tolerancia 15, asi que es tarde
 // a partir de las 09:16 locales.
 await borrar();
-check('entrada a las 09:00 no es tarde (09:00 <= 09:00 + 15)', (await clasificarRegistro(emp, diaLocal('09:00'))).tarde === false);
+check('entrada a las 09:00 no es tarde (09:00 <= 09:00 + 15)', (await clasificarRegistro(emp, 'entrada', diaLocal('09:00'))).tarde === false);
 await borrar();
-check('entrada a las 09:15 no es tarde (justo en el limite)', (await clasificarRegistro(emp, diaLocal('09:15'))).tarde === false);
+check('entrada a las 09:15 no es tarde (justo en el limite)', (await clasificarRegistro(emp, 'entrada', diaLocal('09:15'))).tarde === false);
 await borrar();
-check('entrada a las 09:16 si es tarde', (await clasificarRegistro(emp, diaLocal('09:16'))).tarde === true);
+check('entrada a las 09:16 si es tarde', (await clasificarRegistro(emp, 'entrada', diaLocal('09:16'))).tarde === true);
 // y en el mismo instante, con otra tolerancia, para probar que lee la del empleado
 const emp0 = { id: E, hora_entrada: '09:00:00', tolerancia_min: 0 };
 await borrar();
-check('con tolerancia 0, 09:16 ya es tarde', (await clasificarRegistro(emp0, diaLocal('09:16'))).tarde === true);
+check('con tolerancia 0, 09:16 ya es tarde', (await clasificarRegistro(emp0, 'entrada', diaLocal('09:16'))).tarde === true);
 check('la hora guardada la pone el servidor (nunca el telefono)', true, 'checkin.js: ahora = new Date()');
 await borrar();
 

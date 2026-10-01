@@ -47,6 +47,8 @@ Si un admin o supervisor también checa, además necesita su registro en `emplea
 | 403 | `ROSTRO_NO_REAL` | anti_spoofing detectó foto impresa o pantalla |
 | 404 | `NO_ENCONTRADO` | El recurso no existe |
 | 409 | `DUPLICADO` | Check-in del mismo empleado hace menos de 5 min |
+| 409 | `YA_REGISTRADO` | Ese tipo (entrada/salida) ya se marcó hoy |
+| 409 | `SIN_ENTRADA` | Intenta marcar salida sin haber marcado entrada ese día |
 | 422 | `SIN_ROSTRO` | La foto no tiene exactamente un rostro claro |
 | 429 | `DEMASIADAS_SOLICITUDES` | Rate limit |
 | 503 | `SERVICIO_FACIAL_NO_DISPONIBLE` | face-service no responde |
@@ -123,6 +125,7 @@ La app llama `createSignature({ payload: reto })` (pide la huella) y toma la sel
 |---|---|---|
 | `empleadoId` | número | Guardado en SecureStore al registrarse |
 | `retoId` | número | Del endpoint anterior |
+| `tipo` | `"entrada"` o `"salida"` | Elegido por el empleado en la app (dos botones separados) |
 | `firma` | texto base64 | `signature` devuelta por la librería |
 | `idempotencyKey` | texto UUID | Uno nuevo por intento; se reutiliza si la red reintenta |
 | `selfie` | archivo JPEG | Máx. 1024 px, calidad 70% |
@@ -137,7 +140,7 @@ Respuesta 201:
   "verificacion": { "verificado": true, "distancia": 0.31, "esReal": true }
 }
 ```
-Errores posibles: `RETO_INVALIDO`, `FIRMA_INVALIDA`, `ROSTRO_NO_COINCIDE`, `ROSTRO_NO_REAL`, `SIN_ROSTRO`, `DUPLICADO`, `SERVICIO_FACIAL_NO_DISPONIBLE`.
+Errores posibles: `RETO_INVALIDO`, `FIRMA_INVALIDA`, `ROSTRO_NO_COINCIDE`, `ROSTRO_NO_REAL`, `SIN_ROSTRO`, `DUPLICADO`, `YA_REGISTRADO`, `SIN_ENTRADA`, `SERVICIO_FACIAL_NO_DISPONIBLE`.
 
 **El reto se gasta en cuanto el servidor lo recibe**, aunque el check-in falle después (por ejemplo 503 de DeepFace o rostro no verificado).
 Para reintentar, la app pide un **reto nuevo** y vuelve a firmar con la huella. Solo se reenvía la misma petición (mismo `idempotencyKey`) si la red se cortó y no hubo respuesta: el servidor devuelve el resultado original.
@@ -146,9 +149,10 @@ La respuesta 201 incluye además `"tokenEmpleado": "<JWT 8 h>"` para abrir "Mi a
 
 Reglas del servidor:
 - Hora del registro: la del servidor, nunca la del teléfono.
-- `tipo`: el primer registro del día es `entrada`; el siguiente, `salida`.
+- `tipo`: lo elige el empleado (botón "Marcar entrada" / "Marcar salida"); cada uno se puede registrar **una sola vez al día**. Reintentar el mismo tipo el mismo día -> 409 `YA_REGISTRADO`.
+- `salida` exige haber marcado `entrada` ese mismo día; si no -> 409 `SIN_ENTRADA`.
 - `tarde`: `entrada` después de `hora_entrada + tolerancia_min` del empleado.
-- Duplicado: mismo empleado en menos de 5 minutos.
+- Duplicado: mismo empleado en menos de 5 minutos (de cualquier tipo) -> 409 `DUPLICADO`.
 
 ## 4.1 Dashboard del empleado (rol `empleado`)
 

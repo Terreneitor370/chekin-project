@@ -104,9 +104,15 @@ describe('check-in', () => {
   const valido = {
     empleadoId: 3,
     retoId: 1542,
+    tipo: 'entrada',
     firma: 'ZG9DaGFuZ2UK',
     idempotencyKey: '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
   };
+
+  it('exige que tipo sea entrada o salida', () => {
+    assert.match(falla(checkin, { ...valido, tipo: 'almuerzo' }), /entrada o salida/);
+    assert.notEqual(falla(checkin, { ...valido, tipo: undefined }), null);
+  });
 
   it('acepta un intento bien formado', () => {
     assert.equal(falla(checkin, valido), null);

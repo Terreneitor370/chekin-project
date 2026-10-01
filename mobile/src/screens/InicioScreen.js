@@ -48,13 +48,22 @@ export default function InicioScreen({ navigation }) {
             <Texto style={{ color: colores.suave, textTransform: 'capitalize' }}>{fecha}</Texto>
           </Tarjeta>
 
-          <Pressable onPress={() => navigation.navigate('Checkin')} style={({ pressed }) => [estilos.checar, pressed && { opacity: 0.85 }]}>
-            <Ionicons name="finger-print" size={40} color={colores.blanco} />
+          <Pressable onPress={() => navigation.navigate('Checkin', { tipo: 'entrada' })} style={({ pressed }) => [estilos.checar, pressed && { opacity: 0.85 }]}>
+            <Ionicons name="log-in-outline" size={40} color={colores.blanco} />
             <View style={{ flex: 1 }}>
-              <Texto style={estilos.checarTitulo}>CHECAR ASISTENCIA</Texto>
+              <Texto style={estilos.checarTitulo}>MARCAR ENTRADA</Texto>
               <Texto style={estilos.checarSub}>Huella + rostro</Texto>
             </View>
             <Ionicons name="chevron-forward" size={24} color={colores.blanco} />
+          </Pressable>
+
+          <Pressable onPress={() => navigation.navigate('Checkin', { tipo: 'salida' })} style={({ pressed }) => [estilos.checar, estilos.checarSalida, pressed && { opacity: 0.85 }]}>
+            <Ionicons name="log-out-outline" size={40} color={colores.primario} />
+            <View style={{ flex: 1 }}>
+              <Texto style={[estilos.checarTitulo, { color: colores.primario }]}>MARCAR SALIDA</Texto>
+              <Texto style={[estilos.checarSub, { color: colores.suave }]}>Huella + rostro</Texto>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={colores.primario} />
           </Pressable>
 
           <Boton titulo="Mi asistencia" variante="secundario" icono="calendar-outline" onPress={() => navigation.navigate('MiAsistencia')} />
@@ -94,6 +103,7 @@ const estilos = StyleSheet.create({
     ...(Platform.OS === 'android' ? { fontFamily: 'sans-serif' } : null),
   },
   checar: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colores.primario, borderRadius: 18, padding: 20 },
+  checarSalida: { backgroundColor: colores.blanco, borderWidth: 1.5, borderColor: colores.primario },
   checarTitulo: { color: colores.blanco, fontSize: 19, fontWeight: '800' },
   checarSub: { color: colores.primarioSuave, fontSize: 14 },
 });

@@ -5,10 +5,11 @@ import { esTarde, horaNegocio, rangoDelDia } from '../utils/tiempo.js';
 
 // Reglas del checador (docs/api.md, sección 4):
 //  - hora del servidor
-//  - primer registro del día = entrada, siguiente = salida
+//  - el empleado elige entrada o salida; cada una se puede marcar una sola vez al día
+//  - salida exige haber marcado entrada ese mismo día
 //  - tarde = entrada después de hora_entrada + tolerancia
-//  - duplicado = mismo empleado en menos de VENTANA_DUPLICADO_MIN minutos
-export async function clasificarRegistro(empleado, ahora = new Date()) {
+//  - duplicado = mismo empleado en menos de VENTANA_DUPLICADO_MIN minutos (de cualquier tipo)
+export async function clasificarRegistro(empleado, tipo, ahora = new Date()) {
   const ultimos = await query(
     'SELECT registrado_en FROM checkins WHERE empleado_id = ? ORDER BY registrado_en DESC LIMIT 1',
     [empleado.id],
@@ -20,11 +21,12 @@ export async function clasificarRegistro(empleado, ahora = new Date()) {
     }
   }
   const { inicio, fin } = rangoDelDia();
-  const [{ total }] = await query(
-    'SELECT COUNT(*) AS total FROM checkins WHERE empleado_id = ? AND registrado_en >= ? AND registrado_en < ?',
+  const deHoy = await query(
+    'SELECT tipo FROM checkins WHERE empleado_id = ? AND registrado_en >= ? AND registrado_en < ?',
     [empleado.id, inicio, fin],
   );
-  const tipo = Number(total) % 2 === 0 ? 'entrada' : 'salida';
+  if (tipo === 'salida' && !deHoy.some((c) => c.tipo === 'entrada')) throw errores.sinEntrada();
+  if (deHoy.some((c) => c.tipo === tipo)) throw errores.yaRegistrado(tipo);
   const tarde = tipo === 'entrada' && esTarde(empleado.hora_entrada, empleado.tolerancia_min, ahora);
   return { tipo, tarde };
 }

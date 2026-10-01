@@ -111,6 +111,7 @@ export const retoQuery = z.object({
 export const checkin = z.object({
   empleadoId: id,
   retoId: id,
+  tipo: z.enum(['entrada', 'salida'], 'tipo debe ser entrada o salida'),
   // firma SHA256withRSA de 2048 bits = 256 bytes = ~344 en base64
   firma: z
     .string({ error: 'falta la firma' })
