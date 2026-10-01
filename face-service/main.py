@@ -10,6 +10,7 @@ Correr:  uvicorn main:app --host 127.0.0.1 --port 8000
 """
 import io
 import os
+import sys
 import time
 
 import numpy as np
@@ -25,10 +26,28 @@ app = FastAPI(title="face-service", version="0.1.0")
 _deepface = None
 
 
+def asegurar_streams_utf8() -> None:
+    """DeepFace imprime emojis en warnings y CP1252 rompe el import en Windows."""
+    for stream in (sys.stdout, sys.stderr):
+        if stream is None:
+            continue
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        if (stream.encoding or "").lower() == "utf-8":
+            continue
+        try:
+            reconfigure(encoding="utf-8")
+        except ValueError:
+            continue
+
+
 def deepface():
     """Importa DeepFace una sola vez (tarda varios segundos)."""
     global _deepface
     if _deepface is None:
+        if os.name == "nt":
+            asegurar_streams_utf8()
         from deepface import DeepFace  # noqa: WPS433
 
         _deepface = DeepFace
