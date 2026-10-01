@@ -8,7 +8,7 @@ Configuración del VPS Ubuntu (PDF: Nginx + PM2 + Certbot + ufw + backups).
 |---|---|
 | `nginx/checador.conf` | Proxy de `/api`, `/socket.io`, `/uploads`; sirve `/tv` y `/admin` |
 | `ecosystem.config.cjs` | PM2 para `checador-api` (Node) y `checador-face` (DeepFace) |
-| `scripts/desplegar.sh` | `git pull` + builds + recarga de PM2 |
+| `scripts/desplegar.sh` | `git pull` + builds + normaliza PM2 (`checador-api`/`checador-face`) + health checks |
 | `scripts/configurar-https.sh` | Publica Nginx con dominio real y emite certificado Let's Encrypt |
 | `scripts/backup-mysql.sh` | Backup diario (MySQL + fotos de registro), guarda 7 días |
 | `scripts/restaurar-mysql.sh` | Restaurar backup SQL y (opcionalmente) fotos de registro |
@@ -53,6 +53,23 @@ pm2 save && pm2 startup
 
 - Al menos 2 vCPU y 4 GB de RAM (DeepFace en CPU usa 1.5 a 3 GB).
 - MySQL solo en localhost; el face-service solo en 127.0.0.1:8000.
+
+## Despliegue diario recomendado
+
+```bash
+cd /opt/checador
+bash ./infra/scripts/desplegar.sh
+```
+
+El script:
+- actualiza código (`git pull origin main`),
+- reconstruye frontend y reinstala dependencias del backend,
+- asegura/actualiza el `venv` del face-service e instala `requirements.txt`,
+- predescarga el modelo de DeepFace (`FACE_MODEL`, por defecto `Facenet512`),
+- elimina un proceso PM2 legado llamado `backend` (si existe),
+- arranca o reinicia `checador-api` y `checador-face`,
+- ejecuta `pm2 save`,
+- y valida `http://127.0.0.1:8000/health` + `http://127.0.0.1:3000/health` (requiere `"faceService":true`).
 
 ## URL que se abre en el Roku
 

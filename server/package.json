@@ -14,7 +14,8 @@
     "test": "node --test \"test/*.test.js\"",
     "hash": "node scripts/hash.js",
     "probar-firma": "node scripts/probar-firma.js",
-    "simular": "node scripts/simular-flujo.js"
+    "simular": "node scripts/simular-flujo.js",
+    "stub": "node scripts/face-stub.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

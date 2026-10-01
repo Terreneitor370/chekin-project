@@ -19,6 +19,7 @@ uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
 La primera ejecución descarga los pesos del modelo (cientos de MB). Hacerlo al instalar, nunca durante la demo.
+En Windows, el servicio fuerza `stdout/stderr` a UTF-8 para evitar que un warning de DeepFace falle en consolas CP1252.
 
 ## Endpoints
 
