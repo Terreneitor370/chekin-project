@@ -125,14 +125,14 @@ test('announcements validate dates, preview, publish, edit and pause', async ({ 
   await page.getByRole('button', { name: 'Nuevo aviso' }).click();
   const modal = page.getByRole('dialog');
   await modal.getByLabel('Mensaje', { exact: true }).fill('Junta mañana a las 10');
-  await modal.getByLabel('Inicio (opcional)').fill('2026-10-01T10:00');
-  await modal.getByLabel('Fin (opcional)').fill('2026-09-30T10:00');
+  await modal.getByLabel('Inicio (opcional)').fill('2026-10-01');
+  await modal.getByLabel('Fin (opcional)').fill('2026-09-30');
   await modal.getByRole('button', { name: 'Publicar aviso' }).click();
   await expect(modal.getByRole('alert')).toContainText('posterior');
-  await modal.getByLabel('Fin (opcional)').fill('2026-10-02T10:00');
+  await modal.getByLabel('Fin (opcional)').fill('2026-10-02');
   await modal.getByRole('button', { name: 'Publicar aviso' }).click();
   await expect(page.getByText('Junta mañana a las 10', { exact: true })).toBeVisible();
-  expect(state.calls.find(c => c.method === 'POST' && c.path === '/avisos').body.fechaInicio).toBe('2026-10-01T17:00:00.000Z');
+  expect(state.calls.find(c => c.method === 'POST' && c.path === '/avisos').body.fechaInicio).toBe('2026-10-01');
   await page.getByRole('button', { name: 'Editar aviso 50' }).click();
   await modal.getByLabel('Mensaje', { exact: true }).fill('Mensaje actualizado');
   await modal.getByRole('button', { name: 'Guardar cambios' }).click();
