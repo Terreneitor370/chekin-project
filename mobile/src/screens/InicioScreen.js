@@ -1,6 +1,6 @@
 // Decide a dónde ir según lo que el teléfono ya tiene registrado.
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import { leerSesion } from '../services/sesion';
@@ -83,7 +83,16 @@ const estilos = StyleSheet.create({
   encabezado: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
   reloj: { alignItems: 'center', paddingVertical: 24 },
   saludo: { fontSize: 15, color: colores.suave },
-  hora: { fontSize: 44, fontWeight: '700', fontVariant: ['tabular-nums'], color: colores.texto },
+  hora: {
+    fontSize: 44,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    color: colores.texto,
+    // En Android, la negrita sintética sobre la fuente que algunos fabricantes
+    // (p. ej. MIUI) ponen por default distorsiona los dígitos a este tamaño.
+    // Forzamos la fuente del sistema, que sí trae un peso 700 real.
+    ...(Platform.OS === 'android' ? { fontFamily: 'sans-serif' } : null),
+  },
   checar: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colores.primario, borderRadius: 18, padding: 20 },
   checarTitulo: { color: colores.blanco, fontSize: 19, fontWeight: '800' },
   checarSub: { color: colores.primarioSuave, fontSize: 14 },

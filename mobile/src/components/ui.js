@@ -2,21 +2,22 @@ import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// Paleta alineada al panel-admin y la TV (mockups verdes, marca "Checker").
+// Paleta tomada literal de panel-admin/src/styles.css (Jorge) - mismos
+// valores hex, no una aproximación de los mockups.
 export const colores = {
-  fondo: '#F6F9F7',
-  primario: '#186B4A',
-  primarioSuave: '#E3F3E9',
-  acento: '#3E9C6D',
-  exito: '#186B4A',
-  exitoSuave: '#E3F3E9',
-  advertencia: '#B7791F',
-  advertenciaSuave: '#FBF1DA',
-  error: '#C62828',
-  errorSuave: '#FDE7E7',
-  texto: '#16241C',
-  suave: '#5B6E64',
-  borde: '#DCE7E1',
+  fondo: '#F6F8FA', // body background
+  primario: '#247D69', // --accent / .btn-primary
+  primarioSuave: '#EDF6F1', // .stat.mint
+  acento: '#92C3A9', // barra con datos del chart (.chart-bar-area .has-data)
+  exito: '#5F9270', // .badge-green texto
+  exitoSuave: '#EFF7F0', // .badge-green fondo
+  advertencia: '#B39155', // .badge-amber texto
+  advertenciaSuave: '#FCF6E9', // .badge-amber fondo
+  error: '#B8776D', // .badge-red texto
+  errorSuave: '#F9EFED', // .badge-red fondo
+  texto: '#192B2D', // --ink
+  suave: '#75818E', // --muted
+  borde: '#E5E9ED', // --border
   blanco: '#FFFFFF',
 };
 
