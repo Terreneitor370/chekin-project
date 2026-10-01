@@ -45,8 +45,8 @@ export function Titulo({ children, style }) {
   return <Text style={[estilos.titulo, style]}>{children}</Text>;
 }
 
-export function Texto({ children, style }) {
-  return <Text style={[estilos.texto, style]}>{children}</Text>;
+export function Texto({ children, style, ...props }) {
+  return <Text style={[estilos.texto, style]} {...props}>{children}</Text>;
 }
 
 export function Tarjeta({ children, style }) {

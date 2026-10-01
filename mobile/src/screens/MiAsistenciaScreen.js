@@ -77,9 +77,13 @@ export default function MiAsistenciaScreen({ route }) {
       <Texto style={{ color: colores.suave }}>Horario de entrada {datos.empleado.horaEntrada} (tolerancia {datos.empleado.toleranciaMin} min)</Texto>
 
       <View style={estilos.tarjetas}>
-        <Tarjeta style={estilos.tarjeta}>
+        <Tarjeta style={[estilos.tarjeta, estilos.tarjetaHoy]}>
           <Texto style={estilos.etiqueta}>Hoy</Texto>
-          <Texto style={[estilos.valor, datos.hoy?.tarde && { color: colores.error }]}>
+          <Texto
+            style={[estilos.valor, estilos.valorHoy, datos.hoy?.tarde && { color: colores.advertencia }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
             {hora(datos.hoy?.entrada)} - {hora(datos.hoy?.salida)}
           </Texto>
         </Tarjeta>
@@ -115,7 +119,9 @@ const estilos = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: colores.fondo, padding: 20, gap: 12 },
   tarjetas: { flexDirection: 'row', gap: 10 },
   tarjeta: { flex: 1, padding: 12, gap: 2 },
+  tarjetaHoy: { flex: 1.6 },
   etiqueta: { fontSize: 13, color: colores.suave },
   valor: { fontSize: 18, fontWeight: '700' },
+  valorHoy: { fontSize: 15 },
   fila: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, marginBottom: 8 },
 });
