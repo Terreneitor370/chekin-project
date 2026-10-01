@@ -13,8 +13,11 @@ import os
 import time
 
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image, ImageOps
+
+load_dotenv()  # sin esto, FACE_MODEL/FACE_DETECTOR/FACE_ANTI_SPOOFING del .env nunca se leían
 
 MODELO = os.getenv("FACE_MODEL", "Facenet512")
 DETECTOR = os.getenv("FACE_DETECTOR", "opencv")
